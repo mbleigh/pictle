@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { check, checkAll } from '$lib/check';
-	import { onMount, tick } from 'svelte';
+	import Header, { showError } from '$lib/components/Header.svelte';
 
-	import { fade } from 'svelte/transition';
+	import { check, checkAll } from '$lib/check';
+	import { onMount } from 'svelte';
+	import { logEvent } from '$lib/firebase';
 
 	import '../app.css';
 
@@ -31,8 +32,6 @@
 	let guesses: string[] = [];
 	let gimmes: number[] = [];
 	let shaking = false;
-	let error: string | null = null;
-	let errorTimeout: any = null;
 	let winState: boolean = false;
 	$: winState = guesses.length >= 5;
 	let countdownSeconds: number = 0;
@@ -56,11 +55,7 @@
 		gimmes: number[];
 	}
 
-	let logEvent: (name: string, params?: Record<string, any>) => void = () => {};
 	onMount(async () => {
-		const { logEvent: fLogEvent } = await import('$lib/firebase');
-		logEvent = fLogEvent;
-
 		if (!localStorage['visited']) {
 			showInfo = true;
 			localStorage['visited'] = 'true';
@@ -228,17 +223,6 @@
 		saveState();
 	}
 
-	function showError(message: string) {
-		if (errorTimeout) {
-			clearTimeout(errorTimeout);
-		}
-		error = message;
-		errorTimeout = setTimeout(() => {
-			error = null;
-		}, 1500);
-		logEvent('show_error', { message });
-	}
-
 	function handleKey(event: KeyboardEvent) {
 		if (event.key === 'Delete' || event.key === 'Backspace') {
 			backspace();
@@ -294,34 +278,7 @@
 <svelte:window on:keydown={handleKey} />
 
 <div class="flex flex-col h-full">
-	<header class="border-b border-b-gray-700 p-4 flex items-center justify-center">
-		<div class="max-w-md w-full mx-auto flex items-center justify-center">
-			<button
-				on:click={() => {
-					showInfo = true;
-				}}
-				title="Info"
-				><svg
-					xmlns="http://www.w3.org/2000/svg"
-					class="h-6 w-6"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="currentColor"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-					/>
-				</svg></button
-			>
-			<h1 class="uppercase font-bold text-4xl text-gray-50 flex-1 tracking-widest text-center">
-				Pictle <span class="font-light tracking-tight">{num}</span>
-			</h1>
-			<div class="h-6 w-6" />
-		</div>
-	</header>
+	<Header {num} />
 
 	{#if !ready}
 		<div class="flex-1 flex flex-col items-center justify-center text-3xl text-gray-600">
@@ -466,67 +423,3 @@
 		</div>
 	{/if}
 </div>
-
-{#if error}
-	<div transition:fade={{ duration: 200 }} class="fixed inset-0 text-center pointer-events-none">
-		<div
-			class="inline-block bg-gray-900 rounded-lg px-6 mt-24 py-4 text-xl text-red-500 flex-grow-0"
-		>
-			{@html error}
-		</div>
-	</div>
-{/if}
-
-{#if showInfo}
-	<div
-		transition:fade={{ duration: 200 }}
-		class="fixed inset-0 text-center bg-black bg-opacity-50 flex flex-col justify-center items-center"
-	>
-		<div
-			class="bg-gray-900 rounded-lg p-3 border-2 border-gray-500 m-6 max-w-sm relative text-left"
-		>
-			<button
-				on:click={() => {
-					showInfo = false;
-				}}
-				class="absolute right-2 top-2"
-				><svg
-					xmlns="http://www.w3.org/2000/svg"
-					class="h-6 w-6"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="currentColor"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M6 18L18 6M6 6l12 12"
-					/>
-				</svg></button
-			>
-			<h1 class="text-3xl font-bold mb-3">What is Pictle?</h1>
-			<p class="mb-4">
-				Pictle is a challenging companion game for the wonderful <a
-					class="link"
-					href="https://www.powerlanguage.co.uk/wordle/"
-					target="_blank">Wordle</a
-				>. Using Wordle rules, you must create a picture inspired by the Wordle puzzle from 7 days
-				ago.
-			</p>
-			<p class="font-bold mb-4">
-				The same word can't be used twice, and you get bragging rights for using more unique
-				letters.
-			</p>
-			<p class="mb-6">
-				If you get stuck on a line, the &ldquo;Gimme&rdquo; button will solve up to three lines
-				automatically.
-			</p>
-			<p class="text-center text-sm font-bold">
-				Created by <a class="link" href="https://twitter.com/mbleigh" target="_blank">@mbleigh</a>,
-				powered by
-				<a class="link" href="https://firebase.google.com/" target="_blank">Firebase</a>.
-			</p>
-		</div>
-	</div>
-{/if}

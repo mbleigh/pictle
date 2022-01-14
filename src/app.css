@@ -19,6 +19,9 @@
 	a.link {
 		@apply text-green-400 border-b border-b-green-600;
 	}
+	button {
+		touch-action: manipulation;
+	}
 }
 
 @keyframes shake {

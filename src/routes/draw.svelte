@@ -4,6 +4,7 @@
 
 	import '../app.css';
 	import { checkAll } from '$lib/check';
+	import Index from './index.svelte';
 
 	let grid = [
 		[0, 0, 0, 0, 0],
@@ -87,4 +88,7 @@
 	{/each}
 </div>
 
-<textarea value={JSON.stringify(grid)} class="bg-gray-800 h-48 w-48 font-mono" />
+<textarea
+	value={grid.map((line) => line.join('')).join(' ')}
+	class="bg-gray-800 h-48 w-48 font-mono"
+/>

@@ -214,7 +214,11 @@
 			.join('\n');
 		const message = `🖼️ Pictle ${num} ${3 - gimmesLeft}/3\n\n${emojiGrid}`;
 		if (navigator.share) {
-			await navigator.share({ text: message });
+			await navigator.share({
+				text: message,
+				title: `Pictle - Daily Wordle companion game`,
+				url: 'https://pictle.web.app'
+			});
 		} else {
 			await navigator.clipboard.writeText(message);
 			shareText = 'Copied';

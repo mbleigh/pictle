@@ -33,6 +33,7 @@
   },
   "type": "module",
   "dependencies": {
-    "dark-mode-toggle": "^0.10.0"
+    "dark-mode-toggle": "^0.10.0",
+    "firebase": "^9.6.3"
   }
 }

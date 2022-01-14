@@ -10,14 +10,15 @@
 	const keys = ['qwertyuiop'.split(''), 'asdfghjkl'.split(''), 'zxcvbnm'.split('')];
 
 	const pic = [
-		[0, 0, 1, 0, 0],
-		[0, 1, 2, 1, 0],
-		[0, 0, 1, 0, 0],
-		[0, 0, 1, 0, 0],
-		[1, 0, 1, 0, 1],
+		[0, 0, 0, 0, 1],
+		[0, 0, 1, 2, 0],
+		[0, 0, 2, 0, 1],
+		[0, 0, 2, 0, 0],
+		[0, 2, 2, 0, 0],
 		[2, 2, 2, 2, 2]
 	];
-	const word = 'abbey';
+	const word = 'slump';
+	const num = 202;
 
 	let wip: string = '';
 	let guesses: string[] = [];
@@ -36,7 +37,11 @@
 		gimmesLeft: number;
 	}
 
-	onMount(() => {
+	let logEvent: (name: string, params?: Record<string, any>) => void = () => {};
+	onMount(async () => {
+		const { logEvent: fLogEvent } = await import('$lib/firebase');
+		logEvent = fLogEvent;
+
 		if (!localStorage['visited']) {
 			showInfo = true;
 			localStorage['visited'] = 'true';
@@ -154,7 +159,7 @@
 		}, 1000);
 	}
 
-	function submit() {
+	function submit(gimme = false) {
 		if (wip.length !== 5) {
 			return;
 		}
@@ -172,8 +177,12 @@
 			return;
 		}
 
+		logEvent(gimme ? 'used_gimme' : 'correct_guess');
 		guesses = [...guesses, wip];
 		wip = '';
+		if (guesses.length === 5) {
+			logEvent('solved_puzzle', { gimmes_used: 3 - gimmesLeft });
+		}
 		saveState();
 	}
 
@@ -185,6 +194,7 @@
 		errorTimeout = setTimeout(() => {
 			error = null;
 		}, 1500);
+		logEvent('show_error', { message });
 	}
 
 	function handleKey(event: KeyboardEvent) {
@@ -202,7 +212,7 @@
 		const emojiGrid = pic
 			.map((row) => row.map((cell) => ['⬛', '🟨', '🟩'][cell]).join(''))
 			.join('\n');
-		const message = `🖼️ Pictle 208 ${gimmesLeft}/3\n\n${emojiGrid}`;
+		const message = `🖼️ Pictle ${num} ${3 - gimmesLeft}/3\n\n${emojiGrid}`;
 		if (navigator.share) {
 			await navigator.share({ text: message });
 		} else {
@@ -222,7 +232,7 @@
 		const valid = checkAll(word, pic[guesses.length], 'solvable');
 		wip = valid[Math.floor(Math.random() * valid.length)];
 		gimmesLeft--;
-		submit();
+		submit(true);
 		e.target.blur();
 	}
 </script>
@@ -253,7 +263,7 @@
 				</svg></button
 			>
 			<h1 class="uppercase font-bold text-4xl text-gray-50 flex-1 tracking-widest text-center">
-				Pictle <span class="font-light tracking-tight">208</span>
+				Pictle <span class="font-light tracking-tight">{num}</span>
 			</h1>
 			<div class="h-6 w-6" />
 		</div>

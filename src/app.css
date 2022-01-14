@@ -9,6 +9,7 @@
 		@apply h-full;
 	}
 	body {
+		font-display: swap;
 		@apply h-full bg-gray-800 text-gray-50;
 	}
 

@@ -48,6 +48,8 @@ worker.addEventListener('fetch', (event) => {
 	const isDevServerRequest =
 		url.hostname === self.location.hostname && url.port !== self.location.port;
 	const isStaticAsset = url.host === self.location.host && staticAssets.has(url.pathname);
+	const isPuzzle =
+		url.host === 'pictle-default-rtdb.firebaseio.com' && url.pathname.startsWith('/puzzles/');
 	const skipBecauseUncached = event.request.cache === 'only-if-cached' && !isStaticAsset;
 	if (isHttp && !isDevServerRequest && !skipBecauseUncached) {
 		event.respondWith(
@@ -55,7 +57,7 @@ worker.addEventListener('fetch', (event) => {
 				// always serve static files and bundler-generated assets from cache.
 				// if your application has other URLs with data that will never change,
 				// set this variable to true for them and they will only be fetched once.
-				const cachedAsset = isStaticAsset && (await caches.match(event.request));
+				const cachedAsset = (isStaticAsset || isPuzzle) && (await caches.match(event.request));
 				return cachedAsset || fetchAndCache(event.request);
 			})()
 		);

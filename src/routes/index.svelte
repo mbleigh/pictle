@@ -1,28 +1,26 @@
 <script lang="ts">
 	import { check, checkAll } from '$lib/check';
-	import { FirebaseError } from 'firebase/app';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 
 	import { fade } from 'svelte/transition';
 
 	import '../app.css';
-	import Draw from './draw.svelte';
 
 	const MAX_GIMMES = 3;
 	const EMOJI_STATE = ['⬛', '🟨', '🟩'];
 	const EMOJI_NUMBERS = '0️⃣ 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣ 🔟'.split(' ');
 	const keys = ['qwertyuiop'.split(''), 'asdfghjkl'.split(''), 'zxcvbnm'.split('')];
 
-	const pic = [
-		[0, 0, 0, 0, 1],
-		[0, 0, 1, 2, 0],
-		[0, 0, 2, 0, 1],
-		[0, 0, 2, 0, 0],
-		[0, 2, 2, 0, 0],
-		[2, 2, 2, 2, 2]
-	];
-	const word = 'slump';
-	const num = 202;
+	let num = 200 + Math.floor((Date.now() - 1641974400000) / 86400000);
+	setInterval(() => {
+		num = 200 + Math.floor((Date.now() - 1641974400000) / 86400000);
+	}, 5000);
+	let pic: number[][] | undefined;
+	let word: string | undefined;
+	let ready = false;
+	$: {
+		ready = word && pic?.length === 6;
+	}
 
 	let wip: string = '';
 	let guesses: string[] = [];
@@ -50,6 +48,14 @@
 			showInfo = true;
 			localStorage['visited'] = 'true';
 		}
+
+		const response: { word: string; pic: string } = await (
+			await fetch(`https://pictle-default-rtdb.firebaseio.com/puzzles/${num}.json`)
+		).json();
+
+		word = response.word;
+		pic = response.pic.split(' ').map((line) => line.split('').map((num) => parseInt(num, 10)));
+
 		const stored: StoredState = JSON.parse(localStorage['guesses'] || 'null');
 		if (stored && stored.word === word) {
 			guesses = stored.guesses;
@@ -67,7 +73,7 @@
 	}
 
 	let grid: State[][];
-	$: {
+	$: if (ready) {
 		grid = [[], [], [], [], [], []];
 		for (let y = 0; y < 6; y++) {
 			for (let x = 0; x < 5; x++) {
@@ -142,7 +148,7 @@
 	}
 
 	function keyClasses(key: string): string {
-		if (word.includes(key)) {
+		if ((word || '').includes(key)) {
 			return 'border bg-green-500 border-green-700';
 		} else {
 			return 'bg-gray-500';
@@ -239,7 +245,7 @@
 				})
 				.join('')
 		);
-		const message = `Pictle ${num} 🤌${gimmes.length}/3 🔠${uniqueLetters}/26\n\n${emojiGrid.join(
+		const message = `🖼️ Pictle ${num} 🤌${gimmes.length}/3 🔠${uniqueLetters}/26\n\n${emojiGrid.join(
 			'\n'
 		)}`;
 		if (navigator.share) {
@@ -302,90 +308,95 @@
 		</div>
 	</header>
 
-	<main class="flex-1 items-center flex flex-col justify-center">
-		<div
-			class="border-gray-700 border rounded-lg w-72 mx-auto mt-4 flex items-center justify-center overflow-hidden"
-		>
-			<div class="">
-				{#each pic as row}
-					<div class="text-center flex justify-center">
+	{#if !ready}
+		<div class="flex-1 flex flex-col items-center justify-center text-3xl text-gray-600">
+			Loading...
+		</div>
+	{:else}
+		<main class="flex-1 items-center flex flex-col justify-center">
+			<div
+				class="border-gray-700 border rounded-lg w-72 mx-auto mt-4 flex items-center justify-center overflow-hidden"
+			>
+				<div class="">
+					{#each pic as row}
+						<div class="text-center flex justify-center">
+							{#each row as cell}
+								<div
+									class="border border-l-0 border-t-0 w-3 h-3 {stateClasses({
+										char: ' ',
+										done: true,
+										state: cell,
+										desired: cell
+									})}"
+								/>
+							{/each}
+						</div>
+					{/each}
+				</div>
+				<div class="text-3xl font-bold uppercase flex-1 text-center tracking-widest">{word}</div>
+			</div>
+
+			<div class="my-3">
+				{#each grid as row, i}
+					<div
+						class="text-center mb-1 flex justify-center"
+						class:shake={i === guesses.length && shaking}
+					>
 						{#each row as cell}
 							<div
-								class="border border-l-0 border-t-0 w-3 h-3 {stateClasses({
-									char: ' ',
-									done: true,
-									state: cell,
-									desired: cell
-								})}"
-							/>
+								class="mx-0.5 border-2 w-14 h-14 flex justify-center items-center text-2xl uppercase font-bold {stateClasses(
+									cell
+								)}"
+							>
+								{cell.char}
+							</div>
 						{/each}
 					</div>
 				{/each}
 			</div>
-			<div class="text-3xl font-bold uppercase flex-1 text-center tracking-widest">{word}</div>
-		</div>
-
-		<div class="my-3">
-			{#each grid as row, i}
-				<div
-					class="text-center mb-1 flex justify-center"
-					class:shake={i === guesses.length && shaking}
+			{#if !winState}
+				<button
+					on:click={gimme}
+					class="border rounded-lg py-2 px-4 text-lg uppercase font-bold {gimmes.length < MAX_GIMMES
+						? 'border-gray-300 text-white'
+						: 'border-gray-600 text-gray-600'}">Gimme ({MAX_GIMMES - gimmes.length} left)</button
 				>
-					{#each row as cell}
-						<div
-							class="mx-0.5 border-2 w-14 h-14 flex justify-center items-center text-2xl uppercase font-bold {stateClasses(
-								cell
-							)}"
+			{:else}
+				<div class="text-center">
+					<h1 class="text-2xl font-bold mb-3 flex items-center justify-center">
+						You Solved It!
+						<button
+							class="bg-green-600 text-xl py-1 px-3 ml-4 rounded flex items-center"
+							on:click={share}
+							><svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="h-5 w-5 mr-2"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+							>
+								<path
+									d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"
+								/>
+							</svg>
+							{shareText}</button
 						>
-							{cell.char}
-						</div>
-					{/each}
-				</div>
-			{/each}
-		</div>
-		{#if !winState}
-			<button
-				on:click={gimme}
-				class="border rounded-lg py-2 px-4 text-lg uppercase font-bold {gimmes.length < MAX_GIMMES
-					? 'border-gray-300 text-white'
-					: 'border-gray-600 text-gray-600'}">Gimme ({MAX_GIMMES - gimmes.length} left)</button
-			>
-		{:else}
-			<div class="text-center">
-				<h1 class="text-2xl font-bold mb-3 flex items-center justify-center">
-					You Solved It!
-					<button
-						class="bg-green-600 text-xl py-1 px-3 ml-4 rounded flex items-center"
-						on:click={share}
-						><svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="h-5 w-5 mr-2"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-						>
-							<path
-								d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"
-							/>
-						</svg>
-						{shareText}</button
+					</h1>
+					<p
+						class="mb-2 text-xl flex-1 py-3 border {gimmes.length === 0
+							? 'border-green-300'
+							: 'border-red-300'} rounded-lg"
 					>
-				</h1>
-				<p
-					class="mb-2 text-xl flex-1 py-3 border {gimmes.length === 0
-						? 'border-green-300'
-						: 'border-red-300'} rounded-lg"
-				>
-					<b>Gimmes:</b>
-					{gimmes.length}
-				</p>
-				<p class="mb-4 text-xl flex-1 py-3 border border-gray-600 rounded-lg">
-					<b>Unique Letters:</b>
-					{uniqueLetters}
-				</p>
-			</div>
-		{/if}
-	</main>
-
+						<b>Gimmes:</b>
+						{gimmes.length}
+					</p>
+					<p class="mb-4 text-xl flex-1 py-3 border border-gray-600 rounded-lg">
+						<b>Unique Letters:</b>
+						{uniqueLetters}
+					</p>
+				</div>
+			{/if}
+		</main>
+	{/if}
 	{#if !winState}
 		<div class="mb-2">
 			{#each keys as row, y}

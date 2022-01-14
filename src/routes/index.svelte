@@ -511,9 +511,14 @@
 			<p class="mb-4">
 				Pictle is a challenging companion game for the wonderful <a
 					class="link"
-					href="https://www.powerlanguage.co.uk/wordle/">Wordle</a
-				>. Using Wordle rules, you must create a picture inspired by last week's Wordle puzzle. The
-				same word cannot be used twice.
+					href="https://www.powerlanguage.co.uk/wordle/"
+					target="_blank">Wordle</a
+				>. Using Wordle rules, you must create a picture inspired by the Wordle puzzle from one week
+				ago.
+			</p>
+			<p class="font-bold mb-4">
+				The same word can't be used twice, and you get bragging rights for using more unique
+				letters.
 			</p>
 			<p class="mb-6">
 				If you get stuck on a line, the &ldquo;Gimme&rdquo; button will solve up to three lines

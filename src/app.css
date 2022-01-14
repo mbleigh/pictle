@@ -1,0 +1,51 @@
+/* app.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	html {
+		@apply h-full;
+	}
+	body {
+		@apply h-full bg-gray-800 text-gray-50;
+	}
+
+	a {
+		@apply cursor-pointer;
+	}
+	a.link {
+		@apply text-green-400 border-b border-b-green-600;
+	}
+}
+
+@keyframes shake {
+	0 {
+		transform: translateX(0);
+	}
+	12.5% {
+		transform: translateX(-6px) rotateY(-9deg) skewY(1deg);
+	}
+	37.5% {
+		transform: translateX(5px) rotateY(4.5deg) skewY(-1deg);
+	}
+	62.5% {
+		transform: translateX(-3px) rotateY(-2.25deg) skewY(0);
+	}
+	87.5% {
+		transform: translateX(2px) rotateY(3deg);
+	}
+	100% {
+		transform: translateX(0);
+	}
+}
+
+@layer components {
+	.shake {
+		animation-duration: 0.5s;
+		animation-timing-function: cubic-bezier(0, 0.23, 1, 0.71);
+		animation-name: shake;
+		transform-orgin: center bottom;
+	}
+}

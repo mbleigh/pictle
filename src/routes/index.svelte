@@ -9,11 +9,16 @@
 	const MAX_GIMMES = 3;
 	const EMOJI_STATE = ['⬛', '🟨', '🟩'];
 	const EMOJI_NUMBERS = '0️⃣ 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣ 🔟'.split(' ');
+	const ONE_DAY_MS = 86400000;
+	const PUZZLE_200_START = 1641974400000;
 	const keys = ['qwertyuiop'.split(''), 'asdfghjkl'.split(''), 'zxcvbnm'.split('')];
 
-	let num = 200 + Math.floor((Date.now() - 1641974400000) / 86400000);
+	function puzzleStartTime(num: number): number {
+		return PUZZLE_200_START + (num - 200) * ONE_DAY_MS;
+	}
+	let num = 200 + Math.floor((Date.now() - PUZZLE_200_START) / ONE_DAY_MS);
 	setInterval(() => {
-		num = 200 + Math.floor((Date.now() - 1641974400000) / 86400000);
+		num = 200 + Math.floor((Date.now() - PUZZLE_200_START) / ONE_DAY_MS);
 	}, 5000);
 	let pic: number[][] | undefined;
 	let word: string | undefined;
@@ -30,6 +35,18 @@
 	let errorTimeout: any = null;
 	let winState: boolean = false;
 	$: winState = guesses.length >= 5;
+	let countdownSeconds: number = 0;
+	let countdownInterval: any = null;
+	$: if (winState) {
+		if (!localStorage[`puzzle_${num}`])
+			localStorage[`puzzle_${num}`] = JSON.stringify({ word, pic, guesses, gimmes });
+		countdownSeconds = Math.max((puzzleStartTime(num + 1) - Date.now()) / 1000, 0);
+		if (!countdownInterval) {
+			countdownInterval = setInterval(() => {
+				countdownSeconds = Math.max((puzzleStartTime(num + 1) - Date.now()) / 1000, 0);
+			}, 1000);
+		}
+	}
 	let showInfo: boolean = false;
 
 	interface StoredState {
@@ -147,7 +164,7 @@
 		}
 	}
 
-	function keyClasses(key: string): string {
+	function keyClasses(key: string, word?: string): string {
 		if ((word || '').includes(key)) {
 			return 'border bg-green-500 border-green-700';
 		} else {
@@ -314,6 +331,20 @@
 		</div>
 	{:else}
 		<main class="flex-1 items-center flex flex-col justify-center">
+			{#if winState}
+				<div class="text-2xl mt-4">
+					<span>Next puzzle:</span>
+					<time class="font-bold" datetime={new Date(puzzleStartTime(num + 1)).toISOString()}
+						>{Math.floor(countdownSeconds / 60 / 60)
+							.toString()
+							.padStart(2, '0')}:{Math.floor((countdownSeconds / 60) % 60)
+							.toString()
+							.padStart(2, '0')}:{Math.floor(countdownSeconds % 60)
+							.toString()
+							.padStart(2, '0')}</time
+					>
+				</div>
+			{/if}
 			<div
 				class="border-gray-700 border rounded-lg w-72 mx-auto mt-4 flex items-center justify-center overflow-hidden"
 			>
@@ -398,7 +429,7 @@
 		</main>
 	{/if}
 	{#if !winState}
-		<div class="mb-2">
+		<div class="mb-2 mt-4">
 			{#each keys as row, y}
 				<div class="flex justify-center mb-1">
 					{#if y === 2}
@@ -415,7 +446,8 @@
 								type(key);
 							}}
 							class="w-8 h-12 text-xl font-bold text-center py-2 rounded mx-0.5 uppercase {keyClasses(
-								key
+								key,
+								word
 							)}"
 						>
 							{key}

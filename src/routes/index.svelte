@@ -513,7 +513,7 @@
 					class="link"
 					href="https://www.powerlanguage.co.uk/wordle/"
 					target="_blank">Wordle</a
-				>. Using Wordle rules, you must create a picture inspired by the Wordle puzzle from one week
+				>. Using Wordle rules, you must create a picture inspired by the Wordle puzzle from 7 days
 				ago.
 			</p>
 			<p class="font-bold mb-4">

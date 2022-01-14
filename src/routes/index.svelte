@@ -274,13 +274,15 @@
 	</header>
 
 	<main class="flex-1 items-center flex flex-col justify-center">
-		<div class="border-gray-700 border rounded-lg p-4 w-72 mx-auto mt-4 flex items-center">
+		<div
+			class="border-gray-700 border rounded-lg w-72 mx-auto mt-4 flex items-center justify-center overflow-hidden"
+		>
 			<div class="">
 				{#each pic as row}
 					<div class="text-center flex justify-center">
 						{#each row as cell}
 							<div
-								class="border w-3 h-3 {stateClasses({
+								class="border border-l-0 border-t-0 w-3 h-3 {stateClasses({
 									char: ' ',
 									done: true,
 									state: cell,
@@ -294,7 +296,7 @@
 			<div class="text-3xl font-bold uppercase flex-1 text-center tracking-widest">{word}</div>
 		</div>
 
-		<div class="my-4">
+		<div class="my-3">
 			{#each grid as row, i}
 				<div
 					class="text-center mb-1 flex justify-center"
@@ -314,7 +316,7 @@
 		</div>
 		<button
 			on:click={gimme}
-			class="border rounded-lg py-3 px-6 text-xl uppercase font-bold {gimmesLeft > 0
+			class="border rounded-lg py-2 px-4 text-lg uppercase font-bold {gimmesLeft > 0
 				? 'border-gray-300 text-white'
 				: 'border-gray-600 text-gray-600'}">Gimme ({gimmesLeft} left)</button
 		>

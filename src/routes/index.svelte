@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { check, checkAll } from '$lib/check';
+	import { FirebaseError } from 'firebase/app';
 	import { onMount } from 'svelte';
 
 	import { fade } from 'svelte/transition';
@@ -8,6 +9,8 @@
 	import Draw from './draw.svelte';
 
 	const MAX_GIMMES = 3;
+	const EMOJI_STATE = ['⬛', '🟨', '🟩'];
+	const EMOJI_NUMBERS = '0️⃣ 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣ 🔟'.split(' ');
 	const keys = ['qwertyuiop'.split(''), 'asdfghjkl'.split(''), 'zxcvbnm'.split('')];
 
 	const pic = [
@@ -93,6 +96,21 @@
 				}
 			}
 		}
+	}
+
+	let uniqueLetters: number = 0;
+	let letterFrequencies: Record<string, number> = {};
+	$: {
+		letterFrequencies = {};
+		guesses.forEach((guess, i) => {
+			if (gimmes.includes(i)) return;
+			for (const letter of guess.split('')) {
+				letterFrequencies[letter] = letterFrequencies[letter] || 0;
+				letterFrequencies[letter]++;
+			}
+		});
+		letterFrequencies = { ...letterFrequencies };
+		uniqueLetters = Object.keys(letterFrequencies).length;
 	}
 
 	function stateClasses({ state, done, wip, char, desired }: State): string {
@@ -210,12 +228,20 @@
 
 	let shareText = 'Share';
 	async function share() {
-		const emojiGrid = pic.map((row) => row.map((cell) => ['⬛', '🟨', '🟩'][cell]).join(''));
-		for (let i = 0; i < 5; i++) {
-			emojiGrid[i] += gimmes.includes(i) ? '🚫' : '✨';
-		}
-		emojiGrid[5] += '🖼️';
-		const message = `Pictle ${num} ${gimmes.length}/3\n\n${emojiGrid.join('\n')}`;
+		const emojiGrid = grid.map((row, i) =>
+			row
+				.map((cell) => {
+					if (cell.desired > 0 || gimmes.includes(i)) {
+						return EMOJI_STATE[cell.desired];
+					} else {
+						return EMOJI_NUMBERS[Math.min(letterFrequencies[cell.char], 10)];
+					}
+				})
+				.join('')
+		);
+		const message = `Pictle ${num} 🤌${gimmes.length}/3 🔠${uniqueLetters}/26\n\n${emojiGrid.join(
+			'\n'
+		)}`;
 		if (navigator.share) {
 			await navigator.share({
 				text: message,
@@ -317,50 +343,87 @@
 				</div>
 			{/each}
 		</div>
-		<button
-			on:click={gimme}
-			class="border rounded-lg py-2 px-4 text-lg uppercase font-bold {gimmes.length < MAX_GIMMES
-				? 'border-gray-300 text-white'
-				: 'border-gray-600 text-gray-600'}">Gimme ({MAX_GIMMES - gimmes.length} left)</button
-		>
+		{#if !winState}
+			<button
+				on:click={gimme}
+				class="border rounded-lg py-2 px-4 text-lg uppercase font-bold {gimmes.length < MAX_GIMMES
+					? 'border-gray-300 text-white'
+					: 'border-gray-600 text-gray-600'}">Gimme ({MAX_GIMMES - gimmes.length} left)</button
+			>
+		{:else}
+			<div class="text-center">
+				<h1 class="text-2xl font-bold mb-3 flex items-center justify-center">
+					You Solved It!
+					<button
+						class="bg-green-600 text-xl py-1 px-3 ml-4 rounded flex items-center"
+						on:click={share}
+						><svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="h-5 w-5 mr-2"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+						>
+							<path
+								d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"
+							/>
+						</svg>
+						{shareText}</button
+					>
+				</h1>
+				<p
+					class="mb-2 text-xl flex-1 py-3 border {gimmes.length === 0
+						? 'border-green-300'
+						: 'border-red-300'} rounded-lg"
+				>
+					<b>Gimmes:</b>
+					{gimmes.length}
+				</p>
+				<p class="mb-4 text-xl flex-1 py-3 border border-gray-600 rounded-lg">
+					<b>Unique Letters:</b>
+					{uniqueLetters}
+				</p>
+			</div>
+		{/if}
 	</main>
 
-	<div class="mb-2">
-		{#each keys as row, y}
-			<div class="flex justify-center mb-1">
-				{#if y === 2}
-					<button
-						on:click={() => submit()}
-						class="bg-gray-500 w-16 h-12 text-md font-bold text-center py-3 rounded mx-0.5"
-					>
-						ENTER
-					</button>
-				{/if}
-				{#each row as key}
-					<button
-						on:click={() => {
-							type(key);
-						}}
-						class="w-8 h-12 text-xl font-bold text-center py-2 rounded mx-0.5 uppercase {keyClasses(
-							key
-						)}"
-					>
-						{key}
-					</button>
-				{/each}
-				{#if y === 2}
-					<button
-						on:click={() => {
-							backspace();
-						}}
-						class="bg-gray-500 w-16 h-12 text-2xl font-bold text-center py-2 rounded mx-0.5"
-					>
-						⌫
-					</button>
-				{/if}
-			</div>
-		{/each}
-	</div>
+	{#if !winState}
+		<div class="mb-2">
+			{#each keys as row, y}
+				<div class="flex justify-center mb-1">
+					{#if y === 2}
+						<button
+							on:click={() => submit()}
+							class="bg-gray-500 w-16 h-12 text-md font-bold text-center py-3 rounded mx-0.5"
+						>
+							ENTER
+						</button>
+					{/if}
+					{#each row as key}
+						<button
+							on:click={() => {
+								type(key);
+							}}
+							class="w-8 h-12 text-xl font-bold text-center py-2 rounded mx-0.5 uppercase {keyClasses(
+								key
+							)}"
+						>
+							{key}
+						</button>
+					{/each}
+					{#if y === 2}
+						<button
+							on:click={() => {
+								backspace();
+							}}
+							class="bg-gray-500 w-16 h-12 text-2xl font-bold text-center py-2 rounded mx-0.5"
+						>
+							⌫
+						</button>
+					{/if}
+				</div>
+			{/each}
+		</div>
+	{/if}
 </div>
 
 {#if error}
@@ -369,21 +432,6 @@
 			class="inline-block bg-gray-900 rounded-lg px-6 mt-24 py-4 text-xl text-red-500 flex-grow-0"
 		>
 			{@html error}
-		</div>
-	</div>
-{/if}
-
-{#if winState}
-	<div
-		transition:fade={{ duration: 200 }}
-		class="fixed inset-0 text-center bg-black bg-opacity-50 flex flex-col justify-center items-center"
-	>
-		<div class="bg-gray-900 rounded-lg p-6 border-2 border-green-500 text-center m-6 max-w-sm">
-			<h1 class="text-3xl font-bold mb-3">You Won!</h1>
-			<div>
-				<button class="bg-green-600 text-2xl py-3 px-6 rounded" on:click={share}>{shareText}</button
-				>
-			</div>
 		</div>
 	</div>
 {/if}

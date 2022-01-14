@@ -267,9 +267,7 @@
 		)}`;
 		if (navigator.share) {
 			await navigator.share({
-				text: message,
-				title: `Pictle - Daily Wordle companion game`,
-				url: 'https://pictle.web.app'
+				text: message
 			});
 		} else {
 			await navigator.clipboard.writeText(message);

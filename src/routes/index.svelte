@@ -7,6 +7,7 @@
 	import '../app.css';
 	import Draw from './draw.svelte';
 
+	const MAX_GIMMES = 3;
 	const keys = ['qwertyuiop'.split(''), 'asdfghjkl'.split(''), 'zxcvbnm'.split('')];
 
 	const pic = [
@@ -22,7 +23,7 @@
 
 	let wip: string = '';
 	let guesses: string[] = [];
-	let gimmesLeft: number = 3;
+	let gimmes: number[] = [];
 	let shaking = false;
 	let error: string | null = null;
 	let errorTimeout: any = null;
@@ -34,7 +35,7 @@
 		word?: string;
 		guesses?: string[];
 		wip?: string;
-		gimmesLeft: number;
+		gimmes: number[];
 	}
 
 	let logEvent: (name: string, params?: Record<string, any>) => void = () => {};
@@ -50,7 +51,7 @@
 		if (stored && stored.word === word) {
 			guesses = stored.guesses;
 			wip = stored.wip;
-			gimmesLeft = stored.gimmesLeft;
+			gimmes = stored.gimmes;
 		}
 	});
 
@@ -135,7 +136,7 @@
 			wip,
 			guesses,
 			word,
-			gimmesLeft
+			gimmes
 		});
 	}
 
@@ -181,7 +182,7 @@
 		guesses = [...guesses, wip];
 		wip = '';
 		if (guesses.length === 5) {
-			logEvent('solved_puzzle', { gimmes_used: 3 - gimmesLeft });
+			logEvent('solved_puzzle', { gimmes_used: gimmes.length });
 		}
 		saveState();
 	}
@@ -209,10 +210,12 @@
 
 	let shareText = 'Share';
 	async function share() {
-		const emojiGrid = pic
-			.map((row) => row.map((cell) => ['⬛', '🟨', '🟩'][cell]).join(''))
-			.join('\n');
-		const message = `🖼️ Pictle ${num} ${3 - gimmesLeft}/3\n\n${emojiGrid}`;
+		const emojiGrid = pic.map((row) => row.map((cell) => ['⬛', '🟨', '🟩'][cell]).join(''));
+		for (let i = 0; i < 5; i++) {
+			emojiGrid[i] += gimmes.includes(i) ? '🚫' : '✨';
+		}
+		emojiGrid[5] += '🖼️';
+		const message = `Pictle ${num} ${gimmes.length}/3\n\n${emojiGrid.join('\n')}`;
 		if (navigator.share) {
 			await navigator.share({
 				text: message,
@@ -229,13 +232,13 @@
 	}
 
 	function gimme(e) {
-		if (gimmesLeft === 0) {
+		if (gimmes.length >= MAX_GIMMES) {
 			showError('No gimmes remain.');
 			return;
 		}
 		const valid = checkAll(word, pic[guesses.length], 'solvable');
 		wip = valid[Math.floor(Math.random() * valid.length)];
-		gimmesLeft--;
+		gimmes = [...gimmes, guesses.length];
 		submit(true);
 		e.target.blur();
 	}
@@ -316,9 +319,9 @@
 		</div>
 		<button
 			on:click={gimme}
-			class="border rounded-lg py-2 px-4 text-lg uppercase font-bold {gimmesLeft > 0
+			class="border rounded-lg py-2 px-4 text-lg uppercase font-bold {gimmes.length < MAX_GIMMES
 				? 'border-gray-300 text-white'
-				: 'border-gray-600 text-gray-600'}">Gimme ({gimmesLeft} left)</button
+				: 'border-gray-600 text-gray-600'}">Gimme ({MAX_GIMMES - gimmes.length} left)</button
 		>
 	</main>
 

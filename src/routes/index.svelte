@@ -5,7 +5,10 @@
 	import { onMount } from 'svelte';
 	import { logEvent } from '$lib/firebase';
 
+	import JSConfetti from 'js-confetti';
+	import { scale, fade, slide } from 'svelte/transition';
 	import '../app.css';
+	import { State, generateGrid, stateClasses } from '$lib/grid';
 
 	const MAX_GIMMES = 3;
 	const EMOJI_STATE = ['⬛', '🟨', '🟩'];
@@ -26,6 +29,12 @@
 	let ready = false;
 	$: {
 		ready = word && pic?.length === 6;
+	}
+
+	let grid: State[][] = [];
+	$: if (ready) {
+		grid = generateGrid({ guesses, word, pic, wip });
+		console.log(grid);
 	}
 
 	let wip: string = '';
@@ -76,46 +85,6 @@
 		}
 	});
 
-	interface State {
-		char: string;
-		state: number;
-		wip?: boolean;
-		done?: boolean;
-		desired: number;
-	}
-
-	let grid: State[][];
-	$: if (ready) {
-		grid = [[], [], [], [], [], []];
-		for (let y = 0; y < 6; y++) {
-			for (let x = 0; x < 5; x++) {
-				if (y === 5) {
-					grid[y][x] = { char: word[x], state: 2, done: true, desired: pic[y][x] };
-				} else if (guesses[y]) {
-					const char = guesses[y][x];
-					let state = 0;
-					if (word[x] === char) {
-						state = 2;
-					} else if (word.includes(char)) {
-						state = 1;
-					}
-					grid[y][x] = { char, state, done: true, wip: false, desired: pic[y][x] };
-				} else if (y === guesses.length) {
-					const char = wip[x] || ' ';
-					let state = 0;
-					if (word[x] === char) {
-						state = 2;
-					} else if (word.includes(char)) {
-						state = 1;
-					}
-					grid[y][x] = { char, state, wip: true, done: false, desired: pic[y][x] };
-				} else {
-					grid[y][x] = { char: ' ', state: 0, desired: pic[y][x] };
-				}
-			}
-		}
-	}
-
 	let uniqueLetters: number = 0;
 	let letterFrequencies: Record<string, number> = {};
 	$: {
@@ -129,34 +98,6 @@
 		});
 		letterFrequencies = { ...letterFrequencies };
 		uniqueLetters = Object.keys(letterFrequencies).length;
-	}
-
-	function stateClasses({ state, done, wip, char, desired }: State): string {
-		if (wip) {
-			console.log(state, done);
-		}
-
-		const desiredBorder = ['border-gray-500', 'border-amber-500', 'border-green-700'][desired];
-
-		if (state === 0 && !wip && !done) {
-			return 'border-gray-700';
-		} else if (state === 0 && wip && char === ' ') {
-			return desiredBorder;
-		} else if (state === 0 && wip) {
-			return `${desiredBorder} bg-gray-700`;
-		} else if (state === 0 && done) {
-			return 'border-gray-500';
-		} else if (state === 1 && wip) {
-			console.log('state 1 wip');
-			return `text-yellow-500 bg-gray-700 ${desiredBorder}`;
-		} else if (state === 1 && done) {
-			console.log('state 1 done');
-			return 'bg-yellow-500 border-amber-500';
-		} else if (state === 2 && wip) {
-			return `text-green-300 bg-gray-700 ${desiredBorder}`;
-		} else if (state === 2 && done) {
-			return 'bg-green-500 border-green-700';
-		}
 	}
 
 	function keyClasses(key: string, word?: string): string {
@@ -218,6 +159,9 @@
 		guesses = [...guesses, wip];
 		wip = '';
 		if (guesses.length === 5) {
+			new JSConfetti().addConfetti({
+				confettiColors: ['#4ade80', '#fde047']
+			});
 			logEvent('solved_puzzle', { gimmes_used: gimmes.length });
 		}
 		saveState();
@@ -235,6 +179,7 @@
 
 	let shareText = 'Share';
 	async function share() {
+		logEvent('share');
 		const emojiGrid = grid.map((row, i) =>
 			row
 				.map((cell) => {
@@ -287,7 +232,7 @@
 	{:else}
 		<main class="flex-1 items-center flex flex-col justify-center">
 			{#if winState}
-				<div class="text-2xl mt-4">
+				<div class="text-2xl mt-4" transition:scale={{ duration: 500 }}>
 					<span>Next puzzle:</span>
 					<time class="font-bold" datetime={new Date(puzzleStartTime(num + 1)).toISOString()}
 						>{Math.floor(countdownSeconds / 60 / 60)
@@ -342,13 +287,14 @@
 			</div>
 			{#if !winState}
 				<button
+					out:fade={{ duration: 200 }}
 					on:click={gimme}
 					class="border rounded-lg py-2 px-4 text-lg uppercase font-bold {gimmes.length < MAX_GIMMES
 						? 'border-gray-300 text-white'
 						: 'border-gray-600 text-gray-600'}">Gimme ({MAX_GIMMES - gimmes.length} left)</button
 				>
 			{:else}
-				<div class="text-center">
+				<div class="text-center" transition:scale={{ duration: 500 }}>
 					<h1 class="text-2xl font-bold mb-3 flex items-center justify-center">
 						You Solved It!
 						<button
@@ -384,7 +330,7 @@
 		</main>
 	{/if}
 	{#if !winState}
-		<div class="mb-2 mt-4">
+		<div class="mb-2 mt-4" out:slide={{ duration: 200 }}>
 			{#each keys as row, y}
 				<div class="flex justify-center mb-1">
 					{#if y === 2}

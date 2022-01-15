@@ -34,6 +34,7 @@
   "type": "module",
   "dependencies": {
     "dark-mode-toggle": "^0.10.0",
-    "firebase": "^9.6.3"
+    "firebase": "^9.6.3",
+    "js-confetti": "^0.10.2"
   }
 }

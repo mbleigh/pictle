@@ -20,7 +20,7 @@
 	import { writable } from 'svelte/store';
 	import Info from './Info.svelte';
 
-	export let num: number | undefined;
+	export let num: number | undefined = undefined;
 	let showInfo: boolean = false;
 </script>
 

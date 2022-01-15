@@ -49,6 +49,7 @@
 	$: winState = guesses.length >= 5;
 	let countdownSeconds: number = 0;
 	let countdownInterval: any = null;
+	let streak = 0;
 	$: if (winState) {
 		if (!localStorage[`puzzle_${num}`])
 			localStorage[`puzzle_${num}`] = JSON.stringify({ word, pic, guesses, gimmes });
@@ -57,6 +58,12 @@
 			countdownInterval = setInterval(() => {
 				countdownSeconds = Math.max((puzzleStartTime(num + 1) - Date.now()) / 1000, 0);
 			}, 1000);
+		}
+
+		let puz = num;
+		while (localStorage[`puzzle_${puz}`]) {
+			streak++;
+			puz--;
 		}
 	}
 	let showInfo: boolean = false;
@@ -204,7 +211,7 @@
 		);
 		const message = `🖼️ Pictle ${num} 🔠${uniqueLetters}/26${
 			gimmes.length > 0 ? `🤌${gimmes.length}/3` : ''
-		}\n\n${emojiGrid.join('\n')}`;
+		}${streak > 1 ? ` 🔥 ${streak}` : ''}\n\n${emojiGrid.join('\n')}`;
 		if (navigator.share) {
 			await navigator.share({
 				text: message
@@ -307,7 +314,11 @@
 			{:else}
 				<div class="text-center" transition:scale={{ duration: 500 }}>
 					<h1 class="text-2xl font-bold mb-3 flex items-center justify-center">
-						You Solved It!
+						{#if streak <= 1}
+							You solved it!
+						{:else}
+							<b class="mr-2 text-green-400">{streak}</b> in a row!
+						{/if}
 						<button
 							class="bg-green-600 text-xl py-1 px-3 ml-4 rounded flex items-center"
 							on:click={share}

@@ -21,8 +21,12 @@
 		return PUZZLE_200_START + (num - 200) * ONE_DAY_MS;
 	}
 	let num = 200 + Math.floor((Date.now() - PUZZLE_200_START) / ONE_DAY_MS);
-	setInterval(() => {
-		num = 200 + Math.floor((Date.now() - PUZZLE_200_START) / ONE_DAY_MS);
+	setInterval(async () => {
+		const newNum = 200 + Math.floor((Date.now() - PUZZLE_200_START) / ONE_DAY_MS);
+		if (newNum !== num) {
+			num = newNum;
+			await activatePuzzle(newNum);
+		}
 	}, 5000);
 	let pic: number[][] | undefined;
 	let word: string | undefined;
@@ -64,18 +68,25 @@
 		gimmes: number[];
 	}
 
+	async function activatePuzzle(id: number) {
+		const response: { word: string; pic: string } = await (
+			await fetch(`https://pictle-default-rtdb.firebaseio.com/puzzles/${id}.json`)
+		).json();
+
+		word = response.word;
+		pic = response.pic.split(' ').map((line) => line.split('').map((n) => parseInt(n, 10)));
+		guesses = [];
+		wip = '';
+		gimmes = [];
+	}
+
 	onMount(async () => {
 		if (!localStorage['visited']) {
 			showInfo = true;
 			localStorage['visited'] = 'true';
 		}
 
-		const response: { word: string; pic: string } = await (
-			await fetch(`https://pictle-default-rtdb.firebaseio.com/puzzles/${num}.json`)
-		).json();
-
-		word = response.word;
-		pic = response.pic.split(' ').map((line) => line.split('').map((num) => parseInt(num, 10)));
+		await activatePuzzle(num);
 
 		const stored: StoredState = JSON.parse(localStorage['guesses'] || 'null');
 		if (stored && stored.word === word) {

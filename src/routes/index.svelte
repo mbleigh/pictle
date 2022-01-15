@@ -202,9 +202,9 @@
 				})
 				.join('')
 		);
-		const message = `🖼️ Pictle ${num} 🤌${gimmes.length}/3 🔠${uniqueLetters}/26\n\n${emojiGrid.join(
-			'\n'
-		)}`;
+		const message = `🖼️ Pictle ${num} 🔠${uniqueLetters}/26${
+			gimmes.length > 0 ? `🤌${gimmes.length}/3` : ''
+		}\n\n${emojiGrid.join('\n')}`;
 		if (navigator.share) {
 			await navigator.share({
 				text: message

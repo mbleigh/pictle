@@ -28,6 +28,7 @@
 	<div class="max-w-md w-full mx-auto flex items-center justify-center">
 		<button
 			on:click={() => {
+				logEvent('click_show_info');
 				showInfo = true;
 			}}
 			title="Info"

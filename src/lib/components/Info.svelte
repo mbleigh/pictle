@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { logEvent } from '$lib/firebase';
+
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 </script>
@@ -39,9 +41,19 @@
 		If you get stuck on a line, the &ldquo;Gimme&rdquo; button will solve up to three lines
 		automatically.
 	</p>
-	<p class="text-center text-sm font-bold">
+	<p class="text-center text-sm font-bold mb-4">
 		Created by <a class="link" href="https://twitter.com/mbleigh" target="_blank">@mbleigh</a>,
 		powered by
 		<a class="link" href="https://firebase.google.com/" target="_blank">Firebase</a>.
+	</p>
+	<p class="text-center text-sm font-bold mb-2">
+		<a
+			class="border border-green-400 text-green-300 rounded inline-block py-1 px-3"
+			href="https://github.com/mbleigh/pictle/issues"
+			target="_blank"
+			on:click={() => {
+				logEvent('click_send_feedback');
+			}}>Send Feedback / Report Issues</a
+		>
 	</p>
 </div>

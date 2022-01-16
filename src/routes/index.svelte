@@ -212,7 +212,7 @@
 		const message = `🖼️ Pictle ${num} 🔠${uniqueLetters}/26${
 			gimmes.length > 0 ? `🤌${gimmes.length}/3` : ''
 		}${streak > 1 ? ` 🔥 ${streak}` : ''}\n\n${emojiGrid.join('\n')}`;
-		if (navigator.share) {
+		if (false && navigator.share) {
 			await navigator.share({
 				text: message
 			});

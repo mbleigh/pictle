@@ -12,6 +12,14 @@
 		}, 1500);
 		logEvent('show_error', { message });
 	}
+
+	let showInfoStore = writable<boolean>(false);
+	export async function showInfo() {
+		showInfoStore.set(true);
+	}
+	export async function hideInfo() {
+		showInfoStore.set(false);
+	}
 </script>
 
 <script lang="ts">
@@ -19,9 +27,16 @@
 	import { fade } from 'svelte/transition';
 	import { writable } from 'svelte/store';
 	import Info from './Info.svelte';
+	import { onMount } from 'svelte';
 
 	export let num: number | undefined = undefined;
-	let showInfo: boolean = false;
+
+	onMount(() => {
+		if (!localStorage['visited']) {
+			showInfo();
+			localStorage['visited'] = 'true';
+		}
+	});
 </script>
 
 <header class="border-b border-b-gray-700 p-4 flex items-center justify-center">
@@ -29,7 +44,7 @@
 		<button
 			on:click={() => {
 				logEvent('click_show_info');
-				showInfo = true;
+				showInfo();
 			}}
 			title="Info"
 			><svg
@@ -70,19 +85,19 @@
 	</div>
 {/if}
 
-{#if showInfo}
+{#if $showInfoStore}
 	<div
 		transition:fade={{ duration: 200 }}
 		on:click={(e) => {
 			if (e.target === e.currentTarget) {
-				showInfo = false;
+				hideInfo();
 			}
 		}}
 		class="fixed inset-0 text-center bg-black bg-opacity-50 flex flex-col justify-center items-center z-50"
 	>
 		<Info
 			on:close={() => {
-				showInfo = false;
+				hideInfo();
 			}}
 		/>
 	</div>

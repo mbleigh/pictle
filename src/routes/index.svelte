@@ -131,12 +131,10 @@
 	}): string {
 		let out = '';
 
-		if ((word || '').includes(key)) {
-			if (word[wip.length] === key) {
-				out = 'border bg-green-500 border-green-700';
-			} else {
-				out = 'border bg-yellow-500 border-amber-700';
-			}
+		if (word?.[(wip || '').length] === key) {
+			out = 'border bg-green-500 border-green-700';
+		} else if (word?.includes(key)) {
+			out = 'border bg-yellow-500 border-amber-700';
 		} else {
 			out = 'bg-gray-500';
 		}

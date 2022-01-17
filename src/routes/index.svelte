@@ -118,11 +118,25 @@
 		uniqueLetters = Object.keys(letterFrequencies).length;
 	}
 
-	function keyClasses(key: string, word?: string, guesses?: string[]): string {
+	function keyClasses({
+		key,
+		word,
+		guesses,
+		wip
+	}: {
+		key: string;
+		word?: string;
+		guesses?: string[];
+		wip?: string;
+	}): string {
 		let out = '';
 
 		if ((word || '').includes(key)) {
-			out = 'border bg-green-500 border-green-700';
+			if (word[wip.length] === key) {
+				out = 'border bg-green-500 border-green-700';
+			} else {
+				out = 'border bg-yellow-500 border-amber-700';
+			}
 		} else {
 			out = 'bg-gray-500';
 		}
@@ -382,9 +396,12 @@
 								type(key);
 							}}
 							class="w-8 h-12 text-xl font-bold text-center py-2 rounded mx-0.5 uppercase {keyClasses(
-								key,
-								word,
-								guesses
+								{
+									key,
+									word,
+									guesses,
+									wip
+								}
 							)}"
 						>
 							{key}

@@ -67,14 +67,12 @@ export function stateClasses({ state, done, wip, char, desired }: State): string
 	} else if (state === 0 && done) {
 		return 'border-gray-500';
 	} else if (state === 1 && wip) {
-		console.log('state 1 wip');
 		return `text-yellow-500 bg-gray-700 ${desiredBorder}`;
 	} else if (state === 1 && done) {
-		console.log('state 1 done');
-		return 'bg-yellow-500 border-amber-500';
+		return 'bg-yellow-500 border-amber-700';
 	} else if (state === 2 && wip) {
 		return `text-green-300 bg-gray-700 ${desiredBorder}`;
 	} else if (state === 2 && done) {
-		return 'bg-green-500 border-green-700';
+		return 'bg-green-500 border-green-800';
 	}
 }

@@ -118,12 +118,20 @@
 		uniqueLetters = Object.keys(letterFrequencies).length;
 	}
 
-	function keyClasses(key: string, word?: string): string {
+	function keyClasses(key: string, word?: string, guesses?: string[]): string {
+		let out = '';
+
 		if ((word || '').includes(key)) {
-			return 'border bg-green-500 border-green-700';
+			out = 'border bg-green-500 border-green-700';
 		} else {
-			return 'bg-gray-500';
+			out = 'bg-gray-500';
 		}
+
+		const guessletters = guesses.join('');
+		if (guessletters.includes(key)) {
+			out += ' opacity-70 bg-opacity-30';
+		}
+		return out;
 	}
 
 	function saveState() {
@@ -233,6 +241,11 @@
 		const valid = checkAll(word, pic[guesses.length], 'solvable');
 		wip = valid[Math.floor(Math.random() * valid.length)];
 		gimmes = [...gimmes, guesses.length];
+		new JSConfetti().addConfetti({
+			emojis: ['🤬'],
+			emojiSize: 64,
+			confettiNumber: 80
+		});
 		submit(true);
 		e.target.blur();
 	}
@@ -370,7 +383,8 @@
 							}}
 							class="w-8 h-12 text-xl font-bold text-center py-2 rounded mx-0.5 uppercase {keyClasses(
 								key,
-								word
+								word,
+								guesses
 							)}"
 						>
 							{key}

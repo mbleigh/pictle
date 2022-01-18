@@ -2,7 +2,7 @@
   "rules": {
     "puzzles": {
       "$puzzle_id": {
-        ".read": "now > (1641974400000 + (data.child('id').val() - 200) * 86400000)"
+        ".read": "now > (1642003200000 + (data.child('id').val() - 200) * 86400000)"
       }
     }
   }

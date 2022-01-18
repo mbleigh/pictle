@@ -14,7 +14,7 @@
 	const EMOJI_STATE = ['⬛', '🟨', '🟩'];
 	const EMOJI_NUMBERS = '0️⃣ 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣ 🔟'.split(' ');
 	const ONE_DAY_MS = 86400000;
-	const PUZZLE_200_START = 1641974400000;
+	const PUZZLE_200_START = 1642003200000; // 2022-01-22T16:00:00Z (8am PT)
 	const keys = ['qwertyuiop'.split(''), 'asdfghjkl'.split(''), 'zxcvbnm'.split('')];
 
 	function puzzleStartTime(num: number): number {

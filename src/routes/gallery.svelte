@@ -23,8 +23,6 @@
 			})
 		);
 	});
-
-	$: console.log(pics);
 </script>
 
 <div class="flex flex-col h-full">

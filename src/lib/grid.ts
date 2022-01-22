@@ -21,7 +21,6 @@ export function generateGrid({
 
 	for (let y = 0; y < 6; y++) {
 		for (let x = 0; x < 5; x++) {
-			console.log(y, x);
 			let cell = { char: ' ', state: 0, done: false, wip: false, desired: pic[y][x] };
 			if (y === 5) {
 				cell = { ...cell, char: word[x], state: 2, done: true };
@@ -52,10 +51,6 @@ export function generateGrid({
 }
 
 export function stateClasses({ state, done, wip, char, desired }: State): string {
-	if (wip) {
-		console.log(state, done);
-	}
-
 	const desiredBorder = ['border-gray-500', 'border-amber-500', 'border-green-700'][desired];
 
 	if (state === 0 && !wip && !done) {

@@ -1,7 +1,8 @@
 import { initializeApp } from 'firebase/app';
 import { getAnalytics, logEvent as fLogEvent } from 'firebase/analytics';
+import { getPerformance } from 'firebase/performance';
 
-const app = initializeApp({
+export const app = initializeApp({
 	apiKey: 'AIzaSyCFnoz4_jsO-StDt9vie-SWo0ZSAffUsC8',
 	authDomain: 'pictle.firebaseapp.com',
 	projectId: 'pictle',
@@ -12,6 +13,7 @@ const app = initializeApp({
 });
 
 const analytics = getAnalytics(app);
+const perf = getPerformance(app);
 
 export function logEvent(name: string, params?: Record<string, any>) {
 	return fLogEvent(analytics, name, params);

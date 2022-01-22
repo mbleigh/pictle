@@ -9,6 +9,7 @@
 	import { scale, fade, slide } from 'svelte/transition';
 	import '../app.css';
 	import { State, generateGrid, stateClasses } from '$lib/grid';
+	import { currentUser } from '$lib/auth';
 
 	const MAX_GIMMES = 3;
 	const EMOJI_STATE = ['⬛', '🟨', '🟩'];
@@ -38,7 +39,6 @@
 	let grid: State[][] = [];
 	$: if (ready) {
 		grid = generateGrid({ guesses, word, pic, wip });
-		console.log(grid);
 	}
 
 	let wip: string = '';

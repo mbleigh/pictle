@@ -2,7 +2,15 @@
   "rules": {
     "puzzles": {
       "$puzzle_id": {
-        ".read": "now > (1642003200000 + (data.child('id').val() - 200) * 86400000)"
+        ".read": "now > (1642003200000 + (data.child('id').val() - 200) * 86400000)",
+        ".write": "auth.token.email == 'mbleigh@gmail.com' && auth.token.email_verified == true",
+        ".validate": "newData.child('id').isNumber() && newData.child('word').val().length == 5 && newData.child('pic').val().matches(/^([0-2]{5} ){5}[0-2]{5}$/)"
+      }
+    },
+    "plays": {
+      "$uid": {
+        ".read": "auth.uid == $uid",
+        ".write": "auth.uid == $uid"
       }
     }
   }

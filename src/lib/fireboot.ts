@@ -1,5 +1,4 @@
 import { initializeApp } from 'firebase/app';
-import { getAnalytics, logEvent as fLogEvent } from 'firebase/analytics';
 import { getPerformance } from 'firebase/performance';
 
 export const app = initializeApp({
@@ -12,9 +11,8 @@ export const app = initializeApp({
 	measurementId: 'G-ZEPK6EFR57'
 });
 
-const analytics = getAnalytics(app);
-const perf = getPerformance(app);
-
-export function logEvent(name: string, params?: Record<string, any>) {
-	return fLogEvent(analytics, name, params);
+try {
+	getPerformance(app);
+} catch (e) {
+	console.log('Unable to load Firebase Performance. Probably not in browser.');
 }

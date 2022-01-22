@@ -7,10 +7,16 @@
         ".validate": "newData.child('id').isNumber() && newData.child('word').val().length == 5 && newData.child('pic').val().matches(/^([0-2]{5} ){5}[0-2]{5}$/)"
       }
     },
-    "plays": {
+    "players": {
       "$uid": {
-        ".read": "auth.uid == $uid",
-        ".write": "auth.uid == $uid"
+        "solves": {
+          ".read": "auth.uid == $uid",
+          ".write": "auth.uid == $uid"
+        },
+        "state": {
+          ".read": "auth.uid == $uid",
+          ".write": "auth.uid == $uid"
+        }
       }
     }
   }

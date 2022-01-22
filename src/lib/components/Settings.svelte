@@ -31,7 +31,7 @@
 			/>
 		</svg></button
 	>
-	<h1 class="text-3xl font-bold mb-3">Settings</h1>
+	<h1 class="text-3xl font-bold mb-6">Settings</h1>
 
 	{#if $currentUser.user}
 		<p class="text-sm text-center mb-3">

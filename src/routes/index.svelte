@@ -10,6 +10,7 @@
 	import '../app.css';
 	import { State, generateGrid, stateClasses } from '$lib/grid';
 	import { currentUser } from '$lib/auth';
+	import { dbGet, dbSet } from '$lib/db';
 
 	const MAX_GIMMES = 3;
 	const EMOJI_STATE = ['⬛', '🟨', '🟩'];
@@ -31,6 +32,7 @@
 	}, 5000);
 	let pic: number[][] | undefined;
 	let word: string | undefined;
+	let saveTime: number | undefined;
 	let ready = false;
 	$: {
 		ready = word && pic?.length === 6;
@@ -51,8 +53,10 @@
 	let countdownInterval: any = null;
 	let streak = 0;
 	$: if (winState) {
-		if (!localStorage[`puzzle_${num}`])
+		if (!localStorage[`puzzle_${num}`]) {
 			localStorage[`puzzle_${num}`] = JSON.stringify({ word, pic, guesses, gimmes });
+			syncRemoteSolves();
+		}
 		countdownSeconds = Math.max((puzzleStartTime(num + 1) - Date.now()) / 1000, 0);
 		if (!countdownInterval) {
 			countdownInterval = setInterval(() => {
@@ -73,12 +77,11 @@
 		guesses?: string[];
 		wip?: string;
 		gimmes: number[];
+		saveTime: number;
 	}
 
 	async function activatePuzzle(id: number) {
-		const response: { word: string; pic: string } = await (
-			await fetch(`https://pictle-default-rtdb.firebaseio.com/puzzles/${id}.json`)
-		).json();
+		const response: { word: string; pic: string } = await dbGet(`puzzles/${id}`);
 
 		word = response.word;
 		pic = response.pic.split(' ').map((line) => line.split('').map((n) => parseInt(n, 10)));
@@ -100,8 +103,57 @@
 			guesses = stored.guesses;
 			wip = stored.wip;
 			gimmes = stored.gimmes;
+			saveTime = stored.saveTime;
 		}
 	});
+
+	let remoteSynced = false;
+	$: if ($currentUser.user && !remoteSynced) {
+		syncRemoteState();
+	}
+
+	async function syncRemoteState() {
+		if (!$currentUser.user) return;
+		const state: StoredState = await dbGet<StoredState>(`players/${$currentUser.user.uid}/state`);
+		if (
+			state &&
+			state.word === word &&
+			(!saveTime || state.saveTime > saveTime || state.guesses.length > guesses.length)
+		) {
+			wip = state.wip || '';
+			gimmes = state.gimmes || [];
+			word = state.word || '';
+			guesses = state.guesses || [];
+			saveTime = state.saveTime;
+		}
+
+		return syncRemoteSolves();
+	}
+
+	async function syncRemoteSolves() {
+		if (!$currentUser.user) return;
+		const solves = (await dbGet(`players/${$currentUser.user.uid}/solves`)) || {};
+
+		for (let i = 202; i <= num; i++) {
+			const val = localStorage[`puzzle_${i}`];
+			const solve = solves[i];
+			if (solve && !val) {
+				localStorage[`puzzle_${i}`] = JSON.stringify({
+					gimmes: solve.gimmes || [],
+					guesses: solve.guesses || [],
+					word: solve.word,
+					id: i
+				});
+			}
+			if (val) {
+				const solve = JSON.parse(val);
+				solves[i] = { id: i, gimmes: solve.gimmes, guesses: solve.guesses, word: solve.word };
+			}
+		}
+		if (Object.keys(solves).length) {
+			await dbSet(`players/${$currentUser.user.uid}/solves`, solves);
+		}
+	}
 
 	let uniqueLetters: number = 0;
 	let letterFrequencies: Record<string, number> = {};
@@ -146,13 +198,25 @@
 		return out;
 	}
 
+	let timer;
 	function saveState() {
-		localStorage['guesses'] = JSON.stringify({
-			wip,
-			guesses,
-			word,
-			gimmes
-		});
+		if (timer) clearTimeout(timer);
+		timer = setTimeout(async () => {
+			saveTime = Date.now();
+
+			const state = {
+				wip,
+				guesses,
+				word,
+				gimmes,
+				saveTime
+			};
+
+			localStorage['guesses'] = JSON.stringify(state);
+			if ($currentUser.user) {
+				await dbSet(`players/${$currentUser.user.uid}/state`, state);
+			}
+		}, 500);
 	}
 
 	function type(key: string) {
@@ -165,6 +229,7 @@
 	function backspace() {
 		if (wip.length > 0) {
 			wip = wip.substring(0, wip.length - 1);
+			saveState();
 		}
 	}
 
@@ -193,14 +258,18 @@
 			return;
 		}
 
-		logEvent(gimme ? 'used_gimme' : 'correct_guess');
+		if (gimme) {
+			logEvent('used_gimme', { word });
+		} else {
+			logEvent('correct_guess', { word, guess: wip });
+		}
 		guesses = [...guesses, wip];
 		wip = '';
 		if (guesses.length === 5) {
 			new JSConfetti().addConfetti({
 				confettiColors: ['#4ade80', '#fde047']
 			});
-			logEvent('solved_puzzle', { gimmes_used: gimmes.length });
+			logEvent('solved_puzzle', { word, gimmes_used: gimmes.length });
 		}
 		saveState();
 	}
@@ -253,11 +322,6 @@
 		const valid = checkAll(word, pic[guesses.length], 'solvable');
 		wip = valid[Math.floor(Math.random() * valid.length)];
 		gimmes = [...gimmes, guesses.length];
-		new JSConfetti().addConfetti({
-			emojis: ['🤬'],
-			emojiSize: 64,
-			confettiNumber: 80
-		});
 		submit(true);
 		e.target.blur();
 	}

@@ -7,6 +7,7 @@
 	import JSConfetti from 'js-confetti';
 	import { setUserId } from 'firebase/analytics';
 	import Gallery from './gallery.svelte';
+	import { dbSet } from '$lib/db';
 
 	let grid = [
 		[0, 0, 0, 0, 0],
@@ -38,22 +39,17 @@
 
 	async function submit() {
 		submitText = 'Sending...';
-		const result = await fetch(
-			`https://pictle-default-rtdb.firebaseio.com/puzzles/${pid}.json?auth=${await $currentUser.user.getIdToken()}`,
-			{
-				method: 'PUT',
-				body: JSON.stringify({
-					id: parseInt(pid, 10),
-					word: seed,
-					pic: grid.map((l) => l.join('')).join(' ')
-				})
-			}
-		);
-		submitText = 'Submit';
-		if (result.ok) {
+		try {
+			await dbSet(`puzzles/${pid}`, {
+				id: parseInt(pid, 10),
+				word: seed,
+				pic: grid.map((l) => l.join('')).join(' ')
+			});
 			new JSConfetti().addConfetti();
-		} else {
-			alert(await result.text());
+		} catch (e) {
+			alert(e.message);
+		} finally {
+			submitText = 'Submit';
 		}
 	}
 

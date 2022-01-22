@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getPerformance } from 'firebase/performance';
+import { getAnalytics } from 'firebase/analytics';
 
 export const app = initializeApp({
 	apiKey: 'AIzaSyCFnoz4_jsO-StDt9vie-SWo0ZSAffUsC8',
@@ -13,6 +14,7 @@ export const app = initializeApp({
 
 try {
 	getPerformance(app);
+	getAnalytics(app);
 } catch (e) {
-	console.log('Unable to load Firebase Performance. Probably not in browser.');
+	console.log('Unable to load Firebase Analytics/Performance. Probably not in browser.');
 }

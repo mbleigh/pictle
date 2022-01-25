@@ -65,6 +65,7 @@
 		}
 
 		let puz = num;
+		streak = 0;
 		while (localStorage[`puzzle_${puz}`]) {
 			streak++;
 			puz--;

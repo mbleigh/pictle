@@ -4,6 +4,7 @@ export interface State {
 	wip?: boolean;
 	done?: boolean;
 	desired: number;
+	valid?: string;
 }
 
 export function generateGrid({
@@ -21,7 +22,16 @@ export function generateGrid({
 
 	for (let y = 0; y < 6; y++) {
 		for (let x = 0; x < 5; x++) {
-			let cell = { char: ' ', state: 0, done: false, wip: false, desired: pic[y][x] };
+			let cell: State = { char: ' ', state: 0, done: false, wip: false, desired: pic[y][x] };
+			if (cell.desired === 2) {
+				cell.valid = word[x];
+			} else if (cell.desired === 1) {
+				cell.valid = word
+					.split('')
+					.filter((c) => c !== word[x])
+					.join('');
+			}
+
 			if (y === 5) {
 				cell = { ...cell, char: word[x], state: 2, done: true };
 			} else if (guesses[y]) {

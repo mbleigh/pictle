@@ -298,8 +298,8 @@
 				})
 				.join('')
 		);
-		const message = `🖼️ Pictle ${num} 🔠${uniqueLetters}/26${
-			gimmes.length > 0 ? `🤌${gimmes.length}/3` : ''
+		const message = `🖼️ Pictle ${num} 🔠 ${uniqueLetters}/26${
+			gimmes.length > 0 ? `🤌 ${gimmes.length}/3` : ''
 		}${streak > 1 ? ` 🔥 ${streak}` : ''}\n\n${emojiGrid.join('\n')}`;
 		if (false && navigator.share) {
 			await navigator.share({
@@ -314,16 +314,51 @@
 		}
 	}
 
+	let gimmePrimed = false;
 	function gimme(e) {
 		if (gimmes.length >= MAX_GIMMES) {
 			showError('No gimmes remain.');
 			return;
 		}
-		const valid = checkAll(word, pic[guesses.length], 'solvable');
-		wip = valid[Math.floor(Math.random() * valid.length)];
-		gimmes = [...gimmes, guesses.length];
-		submit(true);
-		e.target.blur();
+
+		if (gimmePrimed) {
+			const valid = checkAll(word, pic[guesses.length], 'solvable');
+			wip = valid[Math.floor(Math.random() * valid.length)];
+			gimmes = [...gimmes, guesses.length];
+			submit(true);
+			gimmePrimed = false;
+			e.target.blur();
+			return;
+		}
+
+		gimmePrimed = true;
+		setTimeout(() => {
+			gimmePrimed = false;
+		}, 3000);
+	}
+
+	let resetPrimed = false;
+	function reset(e) {
+		if (gimmes.length > 0) {
+			showError("Can't reset once gimmes are used.");
+			return;
+		} else if (guesses.length === 0) {
+			return;
+		}
+
+		if (resetPrimed) {
+			guesses = [];
+			wip = '';
+			gimmes = [];
+			saveState();
+			resetPrimed = false;
+			return;
+		}
+
+		resetPrimed = true;
+		setTimeout(() => {
+			resetPrimed = false;
+		}, 3000);
 	}
 </script>
 
@@ -352,26 +387,38 @@
 					>
 				</div>
 			{/if}
-			<div
-				class="border-gray-700 border rounded-lg w-72 mx-auto mt-4 flex items-center justify-center overflow-hidden"
-			>
-				<div class="">
-					{#each pic as row}
-						<div class="text-center flex justify-center">
-							{#each row as cell}
-								<div
-									class="border border-l-0 border-t-0 w-3 h-3 {stateClasses({
-										char: ' ',
-										done: true,
-										state: cell,
-										desired: cell
-									})}"
-								/>
-							{/each}
-						</div>
-					{/each}
+			<div class="flex items-center mt-4">
+				<div
+					class="border-gray-700 border rounded-lg w-56 mx-auto flex items-center justify-center overflow-hidden h-20"
+				>
+					<div class="ml-1 rounded overflow-hidden">
+						{#each pic as row}
+							<div class="text-center flex justify-center">
+								{#each row as cell}
+									<div
+										class="border border-l-0 border-t-0 border-opacity-50 w-3 h-3 {stateClasses({
+											char: ' ',
+											done: true,
+											state: cell,
+											desired: cell
+										})}"
+									/>
+								{/each}
+							</div>
+						{/each}
+					</div>
+					<div class="text-3xl font-bold uppercase flex-1 text-center tracking-widest">{word}</div>
 				</div>
-				<div class="text-3xl font-bold uppercase flex-1 text-center tracking-widest">{word}</div>
+				<div>
+					<div class="border-gray-700 ml-2 border rounded-lg w-16 h-20 text-center py-3">
+						<div class="font-bold">A-Z</div>
+						<div class="text-lg">
+							<span class="font-bold">{uniqueLetters}</span><span class="text-gray-200 text-sm"
+								>/26</span
+							>
+						</div>
+					</div>
+				</div>
 			</div>
 
 			<div class="my-3">
@@ -384,22 +431,63 @@
 							<div
 								class="mx-0.5 border-2 w-14 h-14 flex justify-center items-center text-2xl uppercase font-bold {stateClasses(
 									cell
-								)}"
+								)}{cell.char === ' ' ? ' text-gray-600' : ''}"
 							>
-								{cell.char}
+								{cell.valid?.length === 1 && cell.char === ' ' && guesses.length === i
+									? cell.valid
+									: cell.char}
 							</div>
 						{/each}
 					</div>
 				{/each}
 			</div>
 			{#if !winState}
-				<button
-					out:fade={{ duration: 200 }}
-					on:click={gimme}
-					class="border rounded-lg py-2 px-4 text-lg uppercase font-bold {gimmes.length < MAX_GIMMES
-						? 'border-gray-300 text-white'
-						: 'border-gray-600 text-gray-600'}">Gimme ({MAX_GIMMES - gimmes.length} left)</button
-				>
+				<div out:fade={{ duration: 200 }} class="flex justify-center">
+					<button
+						on:click={reset}
+						class="flex text-lg items-center uppercase p-2 rounded-lg border mr-3 {guesses.length ===
+							0 || gimmes.length > 0
+							? 'border-gray-600 text-gray-600'
+							: 'border-red-100 text-red-200'}"
+						><svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="h-6 w-6 mr-2"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z"
+							/>
+						</svg>
+						{resetPrimed ? 'Sure?' : 'Reset'}</button
+					>
+					<button
+						on:click={gimme}
+						class="flex text-lg items-center uppercase p-2 rounded-lg border {gimmes.length <
+						MAX_GIMMES
+							? 'border-orange-100 text-orange-200'
+							: 'border-gray-600 text-gray-600'}"
+						><svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="h-6 w-6 mr-2"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"
+							/>
+						</svg>
+						{gimmePrimed ? 'You sure?' : `Gimme (${MAX_GIMMES - gimmes.length} left)`}</button
+					>
+				</div>
 			{:else}
 				<div class="text-center" transition:scale={{ duration: 500 }}>
 					<h1 class="text-2xl font-bold mb-3 flex items-center justify-center">

@@ -10,7 +10,7 @@
 	}
 	body {
 		font-display: swap;
-		@apply h-full bg-gray-800 text-gray-50;
+		@apply h-full bg-gray-800 text-white;
 	}
 
 	a {

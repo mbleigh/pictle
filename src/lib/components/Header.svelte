@@ -72,8 +72,9 @@
 				<span class="font-light tracking-tight">{num}</span>
 			{/if}
 		</h1>
+		<div class="h-6 w-6" />
 		<button
-			class="h-6 w-6"
+			class="h-6 w-6 hidden"
 			on:click={() => {
 				logEvent('click_show_settings');
 				settingsVisible = true;

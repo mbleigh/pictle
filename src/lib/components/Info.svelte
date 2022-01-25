@@ -35,12 +35,13 @@
 		>. Using Wordle rules, you must create a picture inspired by the Wordle puzzle from 7 days ago.
 	</p>
 	<p class="font-bold mb-4">
-		The same word can't be used twice, and you get bragging rights for using more unique letters.
+		The same word can't be used twice, and you get points for using more unique letters.
 	</p>
-	<p class="mb-6">
-		If you get stuck on a line, the &ldquo;Gimme&rdquo; button will solve up to three lines
-		automatically.
+	<p class="mb-4">
+		If you get stuck, the <b>Gimme</b> button will solve up to three lines automatically. Gimmes don't
+		count toward unique letter score.
 	</p>
+	<p class="mb-6">If you haven't used a gimme, the <b>Reset</b> button lets you start over.</p>
 	<p class="text-center text-sm font-bold mb-4">
 		Created by <a class="link" href="https://twitter.com/mbleigh" target="_blank">@mbleigh</a>,
 		powered by

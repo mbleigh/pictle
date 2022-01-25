@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import '../app.css';
-	import { checkAll } from '$lib/check';
+	import { checkAll, highLetterScore } from '$lib/check';
 	import '$lib/fireboot';
-	import { currentUser } from '$lib/auth';
+	import { currentUser, signInWithGoogle } from '$lib/auth';
 	import JSConfetti from 'js-confetti';
-	import { setUserId } from 'firebase/analytics';
-	import Gallery from './gallery.svelte';
-	import { dbSet } from '$lib/db';
+	import { dbGet, dbSet } from '$lib/db';
+	import ScoreWorker from '$lib/score_worker?worker';
+	import { getMultiFactorResolver } from 'firebase/auth';
 
 	let grid = [
 		[0, 0, 0, 0, 0],
@@ -23,7 +23,18 @@
 	let valids = [[], [], [], [], [], []];
 	let submitText = 'Submit';
 
-	onMount(() => {
+	function calcHighScore(word: string, pic: number[][]): Promise<number> {
+		return new Promise((resolve, reject) => {
+			const scoreWorker = new ScoreWorker();
+			console.log('starting worker for', word);
+			scoreWorker.postMessage([word, pic]);
+			scoreWorker.onmessage = (e) => {
+				resolve(e.data);
+			};
+		});
+	}
+
+	onMount(async () => {
 		if (localStorage.getItem('_draw')) {
 			const { grid: g, seed: s, pid: p } = JSON.parse(localStorage.getItem('_draw'));
 			grid = g;
@@ -38,12 +49,15 @@
 	}
 
 	async function submit() {
+		submitText = 'Calculating...';
+		const max = await calcHighScore(seed, grid);
 		submitText = 'Sending...';
 		try {
 			await dbSet(`puzzles/${pid}`, {
 				id: parseInt(pid, 10),
 				word: seed,
-				pic: grid.map((l) => l.join('')).join(' ')
+				pic: grid.map((l) => l.join('')).join(' '),
+				max
 			});
 			new JSConfetti().addConfetti();
 		} catch (e) {
@@ -133,6 +147,11 @@
 			on:click|preventDefault={submit}
 			class="bg-green-500 text-2xl uppercase font-bold px-5 py-2 rounded mx-auto"
 			>{submitText}</button
+		>
+	{:else}
+		<button
+			on:click|preventDefault={() => signInWithGoogle()}
+			class="bg-blue-500 text-2xl uppercase font-bold px-5 py-2 rounded mx-auto">Sign In</button
 		>
 	{/if}
 	<button

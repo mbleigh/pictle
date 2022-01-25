@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Header, { showError } from '$lib/components/Header.svelte';
 
-	import { check, checkAll } from '$lib/check';
+	import { check, checkAll, highLetterScore } from '$lib/check';
 	import { onMount } from 'svelte';
 	import { logEvent } from '$lib/firebase';
 
@@ -81,13 +81,14 @@
 	}
 
 	async function activatePuzzle(id: number) {
-		const response: { word: string; pic: string } = await dbGet(`puzzles/${id}`);
+		const response: { word: string; pic: string; max: number } = await dbGet(`puzzles/${id}`);
 
 		word = response.word;
 		pic = response.pic.split(' ').map((line) => line.split('').map((n) => parseInt(n, 10)));
 		guesses = [];
 		wip = '';
 		gimmes = [];
+		maxScore = response.max;
 	}
 
 	onMount(async () => {
@@ -155,11 +156,13 @@
 		}
 	}
 
+	let maxScore: number = 0;
+
 	let uniqueLetters: number = 0;
 	let letterFrequencies: Record<string, number> = {};
 	$: {
 		letterFrequencies = {};
-		guesses.forEach((guess, i) => {
+		(guesses.length === 5 ? guesses : [...guesses, wip]).forEach((guess, i) => {
 			if (gimmes.includes(i)) return;
 			for (const letter of guess.split('')) {
 				letterFrequencies[letter] = letterFrequencies[letter] || 0;
@@ -298,7 +301,7 @@
 				})
 				.join('')
 		);
-		const message = `🖼️ Pictle ${num} 🔠 ${uniqueLetters}/26${
+		const message = `🖼️ Pictle ${num} 🔠 ${uniqueLetters}/${maxScore}${
 			gimmes.length > 0 ? `🤌 ${gimmes.length}/3` : ''
 		}${streak > 1 ? ` 🔥 ${streak}` : ''}\n\n${emojiGrid.join('\n')}`;
 		if (false && navigator.share) {
@@ -410,11 +413,15 @@
 					<div class="text-3xl font-bold uppercase flex-1 text-center tracking-widest">{word}</div>
 				</div>
 				<div>
-					<div class="border-gray-700 ml-2 border rounded-lg w-16 h-20 text-center py-3">
+					<div
+						class="{winState
+							? 'border-green-400'
+							: 'border-gray-700'} ml-2 border rounded-lg w-16 h-20 text-center py-3"
+					>
 						<div class="font-bold">A-Z</div>
 						<div class="text-lg">
-							<span class="font-bold">{uniqueLetters}</span><span class="text-gray-200 text-sm"
-								>/26</span
+							<span class="font-bold{winState ? ' text-green-300' : ''}">{uniqueLetters}</span><span
+								class="text-gray-200 text-sm">/{maxScore}</span
 							>
 						</div>
 					</div>
@@ -512,18 +519,40 @@
 							{shareText}</button
 						>
 					</h1>
-					<p
-						class="mb-2 text-xl flex-1 py-3 border {gimmes.length === 0
-							? 'border-green-300'
-							: 'border-red-300'} rounded-lg"
-					>
-						<b>Gimmes:</b>
-						{gimmes.length}
-					</p>
-					<p class="mb-4 text-xl flex-1 py-3 border border-gray-600 rounded-lg">
-						<b>Unique Letters:</b>
-						{uniqueLetters}
-					</p>
+					{#if gimmes.length}
+						<p
+							class="mb-2 text-xl flex-1 py-3 border {gimmes.length === 0
+								? 'border-green-300'
+								: 'border-red-300'} rounded-lg"
+						>
+							<b>Gimmes:</b>
+							{gimmes.length}
+						</p>
+					{:else}
+						<p class="text-center mt-3 mb-2">Try for a higher letter score?</p>
+						<button
+							on:click={reset}
+							class="flex text-xl items-center p-3 justify-center rounded-lg border mr-3 w-full {guesses.length ===
+								0 || gimmes.length > 0
+								? 'border-gray-600 text-gray-600'
+								: 'border-red-100 text-red-200'}"
+							><svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="h-6 w-6 mr-2"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z"
+								/>
+							</svg>
+							{resetPrimed ? 'Are you sure?' : 'Restart Puzzle'}</button
+						>
+					{/if}
 				</div>
 			{/if}
 		</main>

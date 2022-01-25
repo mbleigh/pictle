@@ -30,10 +30,12 @@
 
 	import Info from './Info.svelte';
 	import Settings from './Settings.svelte';
+	import Changelog from './Changelog.svelte';
 
 	export let num: number | undefined = undefined;
 
 	let settingsVisible = false;
+	let changelogVisible = false;
 
 	onMount(() => {
 		if (!localStorage['visited']) {
@@ -66,6 +68,29 @@
 				/>
 			</svg></button
 		>
+		<button
+			on:click={() => {
+				logEvent('click_show_changelog');
+				changelogVisible = true;
+			}}
+			class="ml-2"
+			title="Changelog"
+		>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				class="h-6 w-6"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+			>
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+				/>
+			</svg>
+		</button>
 		<h1 class="uppercase font-bold text-4xl text-gray-50 flex-1 tracking-widest text-center">
 			Pictle
 			{#if num}
@@ -73,6 +98,7 @@
 			{/if}
 		</h1>
 		<div class="h-6 w-6" />
+		<div class="h-6 w-6 ml-2" />
 		<button
 			class="h-6 w-6 hidden"
 			on:click={() => {
@@ -130,6 +156,23 @@
 		<Info
 			on:close={() => {
 				hideInfo();
+			}}
+		/>
+	</div>
+{/if}
+{#if changelogVisible}
+	<div
+		transition:fade={{ duration: 200 }}
+		on:click={(e) => {
+			if (e.target === e.currentTarget) {
+				changelogVisible = false;
+			}
+		}}
+		class="fixed inset-0 text-center bg-black bg-opacity-50 flex flex-col justify-center items-center z-50"
+	>
+		<Changelog
+			on:close={() => {
+				changelogVisible = false;
 			}}
 		/>
 	</div>

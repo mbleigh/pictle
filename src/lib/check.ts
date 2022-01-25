@@ -36,3 +36,45 @@ export function checkAll(
 	}
 	return out;
 }
+
+const unique = (w, ind, a) => a.indexOf(w) === ind;
+export function highLetterScore(word: string, pic: number[][]): number {
+	if (!pic || !word) return 0;
+	if (pic.length === 6) {
+		pic = pic.slice(0, 5);
+	}
+
+	const choiceGrid = pic.map((row) => checkAll(word, row, 'solvable'));
+
+	let maxScore = 0;
+	let iter = 0;
+	let totalIter = choiceGrid.reduce((acc, c) => acc * c.length, 1);
+	for (let i = 0; i < choiceGrid[0].length; i++) {
+		for (let j = 0; j < choiceGrid[1].length; j++) {
+			for (let k = 0; k < choiceGrid[2].length; k++) {
+				for (let l = 0; l < choiceGrid[3].length; l++) {
+					for (let m = 0; m < choiceGrid[4].length; m++) {
+						const solve = [
+							choiceGrid[0][i],
+							choiceGrid[1][j],
+							choiceGrid[2][k],
+							choiceGrid[3][l],
+							choiceGrid[4][m]
+						];
+						if (solve.filter(unique).length === solve.length) {
+							const uniqueCount = solve.join('').split('').filter(unique).length;
+							if (uniqueCount > maxScore) {
+								maxScore = uniqueCount;
+							}
+						}
+						iter++;
+						if (iter % 1000000 == 0) {
+							console.log(word, 'iteration', iter, `(${(100 * iter) / totalIter}%)`);
+						}
+					}
+				}
+			}
+		}
+	}
+	return maxScore;
+}

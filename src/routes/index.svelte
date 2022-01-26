@@ -173,7 +173,7 @@
 		});
 		letterFrequencies = { ...letterFrequencies };
 		uniqueLetters = Object.keys(letterFrequencies).length;
-		if (maxScore === uniqueLetters) {
+		if (maxScore <= uniqueLetters) {
 			letterScoreClass = {
 				text: 'text-glow-purple text-white',
 				border: 'border-purple-500 glow-purple bg-purple-700'

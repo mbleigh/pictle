@@ -161,6 +161,7 @@
 
 	let uniqueLetters: number = 0;
 	let letterFrequencies: Record<string, number> = {};
+	let letterScoreClass: { text: string; border: string } = { text: '', border: '' };
 	$: {
 		letterFrequencies = {};
 		(guesses.length === 5 ? guesses : [...guesses, wip]).forEach((guess, i) => {
@@ -172,6 +173,18 @@
 		});
 		letterFrequencies = { ...letterFrequencies };
 		uniqueLetters = Object.keys(letterFrequencies).length;
+		if (maxScore === uniqueLetters) {
+			letterScoreClass = {
+				text: 'text-glow-purple text-white',
+				border: 'border-purple-500 glow-purple bg-purple-700'
+			};
+		} else if (maxScore - uniqueLetters <= 3) {
+			letterScoreClass = { text: 'text-green-300', border: 'border-green-500' };
+		} else if (maxScore - uniqueLetters <= 6) {
+			letterScoreClass = { text: 'text-yellow-500', border: 'border-amber-500' };
+		} else {
+			letterScoreClass = { text: 'text-gray-100', border: 'border-gray-700' };
+		}
 	}
 
 	function keyClasses({
@@ -273,7 +286,12 @@
 			new JSConfetti().addConfetti({
 				confettiColors: ['#4ade80', '#fde047']
 			});
-			logEvent('solved_puzzle', { word, gimmes_used: gimmes.length });
+			logEvent('solved_puzzle', {
+				word,
+				gimmes_used: gimmes.length,
+				score: uniqueLetters,
+				perfect_delta: maxScore - uniqueLetters
+			});
 		}
 		saveState();
 	}
@@ -414,14 +432,10 @@
 					<div class="text-3xl font-bold uppercase flex-1 text-center tracking-widest">{word}</div>
 				</div>
 				<div>
-					<div
-						class="{winState
-							? 'border-green-400'
-							: 'border-gray-700'} ml-2 border rounded-lg w-16 h-20 text-center py-3"
-					>
+					<div class="{letterScoreClass.border} ml-2 border rounded-lg w-16 h-20 text-center py-3">
 						<div class="font-bold">A-Z</div>
 						<div class="text-lg">
-							<span class="font-bold{winState ? ' text-green-300' : ''}">{uniqueLetters}</span><span
+							<span class="font-bold {letterScoreClass.text}">{uniqueLetters}</span><span
 								class="text-gray-200 text-sm">/{maxScore}</span
 							>
 						</div>
@@ -529,7 +543,7 @@
 							<b>Gimmes:</b>
 							{gimmes.length}
 						</p>
-					{:else}
+					{:else if uniqueLetters < maxScore}
 						<p class="text-center mt-3 mb-2">Try for a higher letter score?</p>
 						<button
 							on:click={reset}
@@ -553,6 +567,10 @@
 							</svg>
 							{resetPrimed ? 'Are you sure?' : 'Restart Puzzle'}</button
 						>
+					{:else}
+						<div class="text-glow-purple-xl text-3xl font-bold uppercase animate-bounce">
+							Perfect Game!
+						</div>
 					{/if}
 				</div>
 			{/if}

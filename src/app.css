@@ -52,4 +52,16 @@
 		animation-name: shake;
 		transform-orgin: center bottom;
 	}
+
+	.glow-purple {
+		box-shadow: 0 0 10px #cc00ff;
+	}
+
+	.text-glow-purple {
+		text-shadow: 0 0 3px #cc00ff;
+	}
+
+	.text-glow-purple-xl {
+		text-shadow: 0 0 12px #cc00ff;
+	}
 }

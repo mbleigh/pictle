@@ -89,7 +89,7 @@
 		guesses = [];
 		wip = '';
 		gimmes = [];
-		maxScore = response.max;
+		maxScore = response.max || 25;
 	}
 
 	onMount(async () => {

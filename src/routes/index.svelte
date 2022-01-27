@@ -369,6 +369,7 @@
 		}
 
 		if (resetPrimed) {
+			logEvent('reset_puzzle', { word, guesses_made: guesses.length, after_complete: winState });
 			guesses = [];
 			wip = '';
 			gimmes = [];

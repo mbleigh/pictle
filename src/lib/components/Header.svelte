@@ -98,9 +98,9 @@
 			{/if}
 		</h1>
 		<div class="h-6 w-6" />
-		<!-- <div class="h-6 w-6 ml-2" /> -->
+		<div class="h-6 w-6 ml-2" />
 		<button
-			class="h-6 w-6 ml-2"
+			class="h-6 w-6 ml-2 hidden"
 			on:click={() => {
 				logEvent('click_show_settings');
 				settingsVisible = true;

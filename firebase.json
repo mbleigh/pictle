@@ -16,11 +16,12 @@
           }
         ]
       }
+    ],
+    "rewrites": [
+      {"source": "/image/*.png", "function": "renderPuzzle"}
     ]
   },
-  "rewrites": [
-    {"source": "/image/*.png", "function": "renderPuzzle"}
-  ],
+  
 
   "database": {
     "rules": "database.rules.json"

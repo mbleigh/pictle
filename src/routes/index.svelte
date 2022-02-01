@@ -436,7 +436,7 @@
 					<div class="{letterScoreClass.border} ml-2 border rounded-lg w-16 h-20 text-center py-3">
 						<div class="font-bold">A-Z</div>
 						<div class="text-lg">
-							<span class="font-bold {letterScoreClass.text}">{uniqueLetters}</span><span
+							<span class="font-bold mr-0.5 {letterScoreClass.text}">{uniqueLetters}</span><span
 								class="text-gray-200 text-sm">/{maxScore}</span
 							>
 						</div>

@@ -3,9 +3,19 @@ import { get } from 'svelte/store';
 
 const dbOrigin = 'https://pictle-default-rtdb.firebaseio.com';
 
-export async function dbGet<T = any>(path: string): Promise<T | null> {
+export async function dbGet<T = any>(
+	path: string,
+	query: Record<string, string>
+): Promise<T | null> {
 	const token = await get(currentUser)?.user?.getIdToken();
-	const response = await fetch(`${dbOrigin}/${path}.json${token ? `?auth=${token}` : ''}`);
+	const params = new URLSearchParams({ ...query });
+	if (token) {
+		params.set('auth', token);
+	}
+
+	const response = await fetch(
+		`${dbOrigin}/${path}.json${params.toString().length ? `?${params.toString()}` : ''}`
+	);
 	if (response.status === 200) {
 		return (await response.json()) as T;
 	}

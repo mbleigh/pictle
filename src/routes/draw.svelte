@@ -7,7 +7,7 @@
 	import JSConfetti from 'js-confetti';
 	import { dbGet, dbSet } from '$lib/db';
 	import ScoreWorker from '$lib/score_worker?worker';
-	import { getMultiFactorResolver } from 'firebase/auth';
+	import { solvable } from '$lib/words';
 
 	let grid = [
 		[0, 0, 0, 0, 0],
@@ -22,6 +22,16 @@
 	let pid = '';
 	let valids = [[], [], [], [], [], []];
 	let submitText = 'Submit';
+
+	async function fetchNext() {
+		const latest = parseInt(
+			Object.keys(await dbGet('puzzles', { orderBy: '"id"', limitToLast: '1' }))[0],
+			10
+		);
+		pid = (latest + 1).toString();
+		seed = solvable[pid];
+		grid = JSON.parse(defaultGrid);
+	}
 
 	function calcHighScore(word: string, pic: number[][]): Promise<number> {
 		return new Promise((resolve, reject) => {
@@ -142,6 +152,10 @@
 </div>
 
 <div class="text-center">
+	<button
+		on:click={fetchNext}
+		class="bg-purple-500 text-2xl uppercase font-bold px-5 py-2 rounded mx-auto">Fetch</button
+	>
 	{#if $currentUser.user?.email == 'mbleigh@gmail.com'}
 		<button
 			on:click|preventDefault={submit}

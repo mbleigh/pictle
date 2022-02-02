@@ -16,9 +16,13 @@ export const renderPuzzle = functions.https.onRequest(async (req, res) => {
 	const puzzle = parts[parts.length - 1].split('.')[0];
 	const ref = admin.database().ref(`puzzles/${puzzle}`);
 	const snap = await ref.get();
+	const file = admin.storage().bucket().file(`puzzles/${puzzle}.png`);
+
+	res.set('Cache-Control', 'immutable, max-age=31536000, s-maxage=31536000');
+	res.set('Content-Type', 'image/png');
 
 	if (snap.child('image').exists()) {
-		res.redirect(snap.child('image').val(), 302);
+		file.createReadStream().pipe(res);
 	}
 
 	const img = PImage.make(512, 512, {});
@@ -48,11 +52,10 @@ export const renderPuzzle = functions.https.onRequest(async (req, res) => {
 		}
 	}
 
-	const file = admin.storage().bucket().file(`puzzles/${puzzle}.png`);
 	const storeStream = file.createWriteStream({ contentType: 'image/png', public: true });
 	PImage.encodePNGToStream(img, storeStream).then(async () => {
 		const imageUrl = `https://pictle.appspot.com.storage.googleapis.com/puzzles/${puzzle}.png`;
 		await ref.update({ image: imageUrl });
-		res.redirect(imageUrl, 302);
+		file.createReadStream().pipe(res);
 	});
 });

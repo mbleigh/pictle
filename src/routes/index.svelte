@@ -11,20 +11,17 @@
 	import { State, generateGrid, stateClasses } from '$lib/grid';
 	import { currentUser } from '$lib/auth';
 	import { dbGet, dbSet } from '$lib/db';
+	import { puzzleForTime, timeForPuzzle } from '$lib/times';
 
 	const MAX_GIMMES = 3;
 	const EMOJI_STATE = ['⬛', '🟨', '🟩'];
 	const EMOJI_NUMBERS = '0️⃣ 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣ 🔟'.split(' ');
-	const ONE_DAY_MS = 86400000;
-	const PUZZLE_200_START = 1642003200000; // 2022-01-22T16:00:00Z (8am PT)
+
 	const keys = ['qwertyuiop'.split(''), 'asdfghjkl'.split(''), 'zxcvbnm'.split('')];
 
-	function puzzleStartTime(num: number): number {
-		return PUZZLE_200_START + (num - 200) * ONE_DAY_MS;
-	}
-	let num = 200 + Math.floor((Date.now() - PUZZLE_200_START) / ONE_DAY_MS);
+	let num = puzzleForTime();
 	setInterval(async () => {
-		const newNum = 200 + Math.floor((Date.now() - PUZZLE_200_START) / ONE_DAY_MS);
+		const newNum = puzzleForTime();
 		if (newNum !== num) {
 			num = newNum;
 			await activatePuzzle(newNum);
@@ -57,10 +54,10 @@
 			localStorage[`puzzle_${num}`] = JSON.stringify({ word, pic, guesses, gimmes });
 			syncRemoteSolves();
 		}
-		countdownSeconds = Math.max((puzzleStartTime(num + 1) - Date.now()) / 1000, 0);
+		countdownSeconds = Math.max((timeForPuzzle(num + 1) - Date.now()) / 1000, 0);
 		if (!countdownInterval) {
 			countdownInterval = setInterval(() => {
-				countdownSeconds = Math.max((puzzleStartTime(num + 1) - Date.now()) / 1000, 0);
+				countdownSeconds = Math.max((timeForPuzzle(num + 1) - Date.now()) / 1000, 0);
 			}, 1000);
 		}
 
@@ -399,7 +396,7 @@
 			{#if winState}
 				<div class="text-2xl mt-4" transition:scale={{ duration: 500 }}>
 					<span>Next puzzle:</span>
-					<time class="font-bold" datetime={new Date(puzzleStartTime(num + 1)).toISOString()}
+					<time class="font-bold" datetime={new Date(timeForPuzzle(num + 1)).toISOString()}
 						>{Math.floor(countdownSeconds / 60 / 60)
 							.toString()
 							.padStart(2, '0')}:{Math.floor((countdownSeconds / 60) % 60)

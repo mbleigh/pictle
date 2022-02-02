@@ -5,7 +5,7 @@ const dbOrigin = 'https://pictle-default-rtdb.firebaseio.com';
 
 export async function dbGet<T = any>(
 	path: string,
-	query: Record<string, string>
+	query?: Record<string, string>
 ): Promise<T | null> {
 	const token = await get(currentUser)?.user?.getIdToken();
 	const params = new URLSearchParams({ ...query });

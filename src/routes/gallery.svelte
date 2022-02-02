@@ -5,9 +5,14 @@
 	import { generateGrid, State, stateClasses } from '$lib/grid';
 
 	let pics: { word: string; grid: State[][] }[];
+
+	const puzzles = [];
+	for (let i = 202; i < 227; i++) {
+		puzzles.push(i);
+	}
 	onMount(async () => {
 		pics = await Promise.all(
-			[202, 203, 204, 205].map(async (num) => {
+			puzzles.map(async (num) => {
 				const { pic, word } = await (
 					await fetch(`https://pictle-default-rtdb.firebaseio.com/puzzles/${num}.json`)
 				).json();
@@ -47,6 +52,11 @@
 				{/each}
 				<h2 class="font-bold text-2xl uppercase text-center">{pic.word}</h2>
 			</div>
+		{/each}
+	</div>
+	<div class="flex mt-20 justify-center">
+		{#each puzzles as puzzle}
+			<img src="https://pictle.web.app/image/{puzzle}.png" width="64" height="64" alt={puzzle} />
 		{/each}
 	</div>
 </div>

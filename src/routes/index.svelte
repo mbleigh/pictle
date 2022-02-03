@@ -3,7 +3,7 @@
 
 	import { check, checkAll, highLetterScore } from '$lib/check';
 	import { onMount } from 'svelte';
-	import { logEvent } from '$lib/firebase';
+	import { getMessagingToken, logEvent } from '$lib/firebase';
 
 	import JSConfetti from 'js-confetti';
 	import { scale, fade, slide } from 'svelte/transition';
@@ -12,6 +12,7 @@
 	import { currentUser } from '$lib/auth';
 	import { dbGet, dbSet } from '$lib/db';
 	import { puzzleForTime, timeForPuzzle } from '$lib/times';
+	import { isSupported } from 'firebase/messaging';
 
 	const MAX_GIMMES = 3;
 	const EMOJI_STATE = ['⬛', '🟨', '🟩'];
@@ -89,10 +90,27 @@
 		maxScore = response.max || 25;
 	}
 
+	async function checkNotifState() {
+		try {
+			const token = localStorage['notif_token'];
+			const exists = await dbGet(`notifications/${token}`);
+			if (exists) notifEnabled = true;
+		} catch (e) {
+			notifEnabled = false;
+		}
+	}
+
+	let notifEnabled = false;
+	let notifSupported = false;
+
 	onMount(async () => {
 		if (!localStorage['visited']) {
 			showInfo = true;
 			localStorage['visited'] = 'true';
+		}
+
+		if (await isSupported()) {
+			notifSupported = true;
 		}
 
 		await activatePuzzle(num);
@@ -104,6 +122,8 @@
 			gimmes = stored.gimmes;
 			saveTime = stored.saveTime;
 		}
+
+		checkNotifState();
 	});
 
 	let remoteSynced = false;
@@ -380,6 +400,26 @@
 			resetPrimed = false;
 		}, 3000);
 	}
+
+	async function toggleNotifications() {
+		if (!notifEnabled) {
+			try {
+				const token = await getMessagingToken();
+				notifEnabled = true;
+				await dbSet(`notifications/${token}`, Date.now());
+				localStorage['notif_token'] = token;
+				logEvent('enable_notifications');
+			} catch (e) {
+				showError('Unable to enable notifications.');
+				notifEnabled = false;
+			}
+		} else {
+			notifEnabled = false;
+			await dbSet(`notifications/${await getMessagingToken()}`, null);
+			localStorage.removeItem('notif_token');
+			logEvent('disable_notifications');
+		}
+	}
 </script>
 
 <svelte:window on:keydown={handleKey} />
@@ -406,6 +446,34 @@
 							.padStart(2, '0')}</time
 					>
 				</div>
+				{#if notifSupported}
+					<button
+						on:click={() => {
+							toggleNotifications();
+						}}
+						class="flex border {notifEnabled
+							? 'border-amber-400'
+							: 'border-gray-600'} rounded mt-2 py-1 px-2 transition-colors"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="h-6 w-6 mr-1 {notifEnabled
+								? 'text-amber-300'
+								: 'text-gray-400'} transition-colors"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+							/>
+						</svg>
+						{notifEnabled ? 'Stop Notifications' : 'Notify Me!'}
+					</button>
+				{/if}
 			{/if}
 			<div class="flex items-center mt-4">
 				<div

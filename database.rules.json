@@ -20,6 +20,13 @@
           ".write": "auth.uid == $uid"
         }
       }
+    },
+    "notifications": {
+      "$token": {
+        ".read": true,
+        ".write": true,
+        ".validate": "newData.isNumber()"
+      }
     }
   }
 }

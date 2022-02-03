@@ -1,5 +1,18 @@
 import { build, files, timestamp } from '$service-worker';
-const worker = (self as unknown) as any;
+import { app } from '$lib/fireboot';
+import { getMessaging } from 'firebase/messaging/sw';
+declare const self: any;
+
+getMessaging(app);
+// onBackgroundMessage(messaging, (payload) => {
+// 	console.log(payload);
+// });
+
+self.addEventListener('notificationclick', (event) => {
+	console.log('notif click:', event);
+});
+
+const worker = self as unknown as any;
 const FILES = `cache${timestamp}`;
 const to_cache = build.concat(files);
 const staticAssets = new Set(to_cache);
@@ -12,6 +25,7 @@ worker.addEventListener('install', (event) => {
 			.then(() => {
 				worker.skipWaiting();
 			})
+			.catch((e) => console.log(e))
 	);
 });
 // listen for the activate events

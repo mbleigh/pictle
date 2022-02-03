@@ -59,3 +59,35 @@ export const renderPuzzle = functions.https.onRequest(async (req, res) => {
 		file.createReadStream().pipe(res);
 	});
 });
+
+export const manageNotifications = functions.database
+	.ref('notifications/{token}')
+	.onWrite(async (change, context) => {
+		if (change.after.exists()) {
+			await admin.messaging().subscribeToTopic(context.params.token, 'new_puzzle');
+			functions.logger.info(
+				`Subscribed token ${context.params.token.substr(0, 10)} to notifications.`
+			);
+		} else {
+			await admin.messaging().unsubscribeFromTopic(context.params.token, 'new_puzzle');
+			functions.logger.info(
+				`Unsubscribed token ${context.params.token.substr(0, 10)} from notifications.`
+			);
+		}
+	});
+
+export const sendNotifications = functions.https.onRequest(async (req, res) => {
+	await admin.messaging().send({
+		topic: 'new_puzzle',
+
+		notification: {
+			title: `Pictle #225: TESTS`,
+			body: 'These puzzles are TESTS for your Wordleyness!',
+			imageUrl: `https://pictle.web.app/image/225.png`
+		},
+		webpush: {
+			fcmOptions: { link: 'https://pictle.web.app/?utm_medium=push&utm_campaign=new_puzzle' }
+		}
+	});
+	res.send('SENT');
+});

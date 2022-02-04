@@ -1,12 +1,10 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-
-	import { logEvent } from '$lib/firebase';
 	import { currentUser, signInWithGoogle, signOut } from '$lib/auth';
-	import { setUserId } from 'firebase/analytics';
+	import Toggle from './Toggle.svelte';
 
 	const dispatch = createEventDispatcher();
-
+	export let notifEnabled = false;
 	$: console.log($currentUser);
 </script>
 
@@ -33,21 +31,27 @@
 	>
 	<h1 class="text-3xl font-bold mb-6">Settings</h1>
 
-	{#if $currentUser.user}
-		<p class="text-sm text-center mb-3">
-			Signed in as <b>{$currentUser.user.email}</b>.
-		</p>
-		<button
-			class="rounded border border-gray-400 py-2 px-3 text-center block w-full"
-			on:click={() => signOut()}>Sign Out</button
-		>
-	{:else}
-		<p class="text-sm mb-3">
-			Signing in allows you to keep your streak and preferences across devices.
-		</p>
-		<button
-			class="rounded border border-blue-400 text-blue-300 py-2 px-3 w-full"
-			on:click={() => signInWithGoogle()}>Sign in with Google</button
-		>
+	<div class="flex">
+		<div class="flex-1">Notify on new puzzle</div>
+		<Toggle bind:checked={notifEnabled} />
+	</div>
+	{#if false}
+		{#if $currentUser.user}
+			<p class="text-sm text-center mb-3">
+				Signed in as <b>{$currentUser.user.email}</b>.
+			</p>
+			<button
+				class="rounded border border-gray-400 py-2 px-3 text-center block w-full"
+				on:click={() => signOut()}>Sign Out</button
+			>
+		{:else}
+			<p class="text-sm mb-3">
+				Signing in allows you to keep your streak and preferences across devices.
+			</p>
+			<button
+				class="rounded border border-blue-400 text-blue-300 py-2 px-3 w-full"
+				on:click={() => signInWithGoogle()}>Sign in with Google</button
+			>
+		{/if}
 	{/if}
 </div>

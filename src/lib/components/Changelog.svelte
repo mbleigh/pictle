@@ -27,6 +27,12 @@
 		</svg></button
 	>
 	<h1 class="text-3xl font-bold mb-3">Changelog</h1>
+	<h2 class="text-green-300 font-bold text-xl mb-2">February 3, 2022</h2>
+	<ul class="list-disc pl-6 text-sm marker:text-green-300">
+		<li>Improved PWA icons (proper maskable, monochrome).</li>
+		<li>Added opt-in push notifications for new puzzles.</li>
+		<li>Fixed issue where reset could accidentally be retriggered.</li>
+	</ul>
 	<h2 class="text-green-300 font-bold text-xl mb-2">January 25, 2022</h2>
 	<ul class="list-disc pl-6 text-sm marker:text-green-300">
 		<li>Added a <b>Reset</b> button to restart the current puzzle.</li>

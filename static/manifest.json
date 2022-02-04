@@ -21,16 +21,16 @@
     {"src": "icon_maskable_144.png", "type": "image/png", "sizes": "144x144", "purpose": "maskable"},
     {"src": "icon_maskable_128.png", "type": "image/png", "sizes": "128x128", "purpose": "maskable"},
     
-    {"src": "icon_monochrome_512.png", "type": "image/png", "sizes": "512x512", "purpose": "monochrome"},
-    {"src": "icon_monochrome_256.png", "type": "image/png", "sizes": "256x256", "purpose": "monochrome"},
-    {"src": "icon_monochrome_192.png", "type": "image/png", "sizes": "192x192", "purpose": "monochrome"},
-    {"src": "icon_monochrome_144.png", "type": "image/png", "sizes": "144x144", "purpose": "monochrome"},
-    {"src": "icon_monochrome_128.png", "type": "image/png", "sizes": "128x128", "purpose": "monochrome"},
+    {"src": "icon_mono_512.png", "type": "image/png", "sizes": "512x512", "purpose": "monochrome"},
+    {"src": "icon_mono_256.png", "type": "image/png", "sizes": "256x256", "purpose": "monochrome"},
+    {"src": "icon_mono_192.png", "type": "image/png", "sizes": "192x192", "purpose": "monochrome"},
+    {"src": "icon_mono_144.png", "type": "image/png", "sizes": "144x144", "purpose": "monochrome"},
+    {"src": "icon_mono_128.png", "type": "image/png", "sizes": "128x128", "purpose": "monochrome"},
 
-    {"src": "icon_monochrome_maskable_512.png", "type": "image/png", "sizes": "512x512", "purpose": "monochrome maskable"},
-    {"src": "icon_monochrome_maskable_256.png", "type": "image/png", "sizes": "256x256", "purpose": "monochrome maskable"},
-    {"src": "icon_monochrome_maskable_192.png", "type": "image/png", "sizes": "192x192", "purpose": "monochrome maskable"},
-    {"src": "icon_monochrome_maskable_144.png", "type": "image/png", "sizes": "144x144", "purpose": "monochrome maskable"},
-    {"src": "icon_monochrome_maskable_128.png", "type": "image/png", "sizes": "128x128", "purpose": "monochrome maskable"}
+    {"src": "icon_mono_maskable_512.png", "type": "image/png", "sizes": "512x512", "purpose": "monochrome maskable"},
+    {"src": "icon_mono_maskable_256.png", "type": "image/png", "sizes": "256x256", "purpose": "monochrome maskable"},
+    {"src": "icon_mono_maskable_192.png", "type": "image/png", "sizes": "192x192", "purpose": "monochrome maskable"},
+    {"src": "icon_mono_maskable_144.png", "type": "image/png", "sizes": "144x144", "purpose": "monochrome maskable"},
+    {"src": "icon_mono_maskable_128.png", "type": "image/png", "sizes": "128x128", "purpose": "monochrome maskable"}
   ]
 }

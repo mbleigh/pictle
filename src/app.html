@@ -18,15 +18,13 @@
 		<link rel="manifest" crossorigin="use-credentials" href="/manifest.json">
 
 		<title>Pictle - A daily Wordle companion</title>
-		<link
-			rel="stylesheet"
-			type="text/css"
-			media="screen"
-			href="https://cdn.rawgit.com/resir014/Clear-Sans-Webfont/v1.1.1/css/clear-sans.css"
-		/>
 		<link rel="shortcut icon" type="image/x-icon" href="%svelte.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		%svelte.head%
+
+		<link rel=“preload” href=“/fonts/ClearSans-Light-webfont.woff” as=“font”>
+		<link rel=“preload” href=“/fonts/ClearSans-Bold-webfont.woff” as=“font”>
+		<link rel=“preload” href=“/fonts/ClearSans-Regular-webfont.woff” as=“font”>
 	</head>
 	<body>
 		<div id="svelte" class="h-full">%svelte.body%</div>

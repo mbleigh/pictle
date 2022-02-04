@@ -4,6 +4,27 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+	font-family: 'Clear Sans';
+	src: local('Clear Sans'), url('/fonts/ClearSans-Regular-webfont.woff') format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Clear Sans';
+	src: local('Clear Sans Bold'), url('/fonts/ClearSans-Bold-webfont.woff') format('woff');
+	font-weight: bold;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'Clear Sans';
+	src: local('Clear Sans Light'), url('/fonts/ClearSans-Light-webfont.woff') format('woff');
+	font-weight: 300;
+	font-style: normal;
+}
+
 @layer base {
 	html {
 		@apply h-full;

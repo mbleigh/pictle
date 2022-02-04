@@ -392,6 +392,7 @@
 			gimmes = [];
 			saveState();
 			resetPrimed = false;
+			e.target?.blur?.();
 			return;
 		}
 

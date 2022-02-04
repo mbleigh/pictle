@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import * as PImage from 'pureimage';
+import { puzzleForTime } from './times';
 
 admin.initializeApp();
 
@@ -76,18 +77,29 @@ export const manageNotifications = functions.database
 		}
 	});
 
-export const sendNotifications = functions.https.onRequest(async (req, res) => {
-	await admin.messaging().send({
-		topic: 'new_puzzle',
+export const sendNotifications = functions.pubsub
+	.schedule('0 8 * * *')
+	.timeZone('America/Los_Angeles')
+	.onRun(async () => {
+		const puzzle = puzzleForTime(Date.now() + 3600000);
+		const snap = await admin.database().ref(`puzzles/${puzzle}`).get();
+		const { word, teaser }: { word: string; teaser?: string } = snap.val();
 
-		notification: {
-			title: `Pictle #225: TESTS`,
-			body: 'These puzzles are TESTS for your Wordleyness!',
-			imageUrl: `https://pictle.web.app/image/225.png`
-		},
-		webpush: {
-			fcmOptions: { link: 'https://pictle.web.app/?utm_medium=push&utm_campaign=new_puzzle' }
-		}
+		await admin.messaging().send({
+			topic: 'new_puzzle',
+
+			notification: {
+				title: `Pictle #${puzzle}: ${word.toUpperCase()} is live!`,
+				body: teaser || `A new puzzle is ready to test your Wordley wits`
+			},
+			webpush: {
+				notification: {
+					icon: `https://pictle.web.app/image/${puzzle}.png`,
+					tag: 'new_puzzle',
+					badge: '/icon_mono_128.png'
+				},
+				fcmOptions: { link: `/?utm_medium=push&utm_campaign=new_puzzle_${puzzle}` }
+			}
+		});
+		functions.logger.info(`Delivered push for puzzle #${puzzle} (${word.toUpperCase()})`);
 	});
-	res.send('SENT');
-});

@@ -3,11 +3,12 @@
 	import Header from '$lib/components/Header.svelte';
 	import { onMount } from 'svelte';
 	import { generateGrid, State, stateClasses } from '$lib/grid';
+	import { puzzleForTime } from '$lib/times';
 
 	let pics: { word: string; grid: State[][] }[];
 
 	const puzzles = [];
-	for (let i = 202; i < 227; i++) {
+	for (let i = 202; i <= puzzleForTime(Date.now()); i++) {
 		puzzles.push(i);
 	}
 	onMount(async () => {

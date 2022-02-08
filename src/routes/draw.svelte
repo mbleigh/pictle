@@ -20,6 +20,7 @@
 	const defaultGrid = JSON.stringify(grid);
 	let seed = '';
 	let pid = '';
+	let teaser = '';
 	let valids = [[], [], [], [], [], []];
 	let submitText = 'Submit';
 
@@ -67,6 +68,7 @@
 				id: parseInt(pid, 10),
 				word: seed,
 				pic: grid.map((l) => l.join('')).join(' '),
+				teaser: teaser || null,
 				max
 			});
 			new JSConfetti().addConfetti();
@@ -127,6 +129,14 @@
 		class="bg-gray-800 border border-gray-600 rounded text-xl w-20"
 		maxlength="5"
 		bind:value={seed}
+	/>
+</div>
+
+<div class="text-center mt-2 text-xl">
+	Teaser: <input
+		type="text"
+		bind:value={teaser}
+		class="bg-gray-800 border border-gray-600 rounded text-xl w-48"
 	/>
 </div>
 

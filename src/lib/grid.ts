@@ -1,3 +1,5 @@
+import { letterState } from './check';
+
 export interface State {
 	char: string;
 	state: number;
@@ -36,21 +38,11 @@ export function generateGrid({
 				cell = { ...cell, char: word[x], state: 2, done: true };
 			} else if (guesses[y]) {
 				const char = guesses[y][x];
-				let state = 0;
-				if (word[x] === char) {
-					state = 2;
-				} else if (word.includes(char)) {
-					state = 1;
-				}
+				const state = letterState(word, guesses[y], x);
 				cell = { ...cell, char, state, done: true };
 			} else if (y === guesses.length) {
 				const char = wip[x] || ' ';
-				let state = 0;
-				if (word[x] === char) {
-					state = 2;
-				} else if (word.includes(char)) {
-					state = 1;
-				}
+				const state = letterState(word, wip, x);
 				cell = { ...cell, char, state, wip: true };
 			}
 

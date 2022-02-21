@@ -2,6 +2,7 @@
 firebase-debug.log
 node_modules
 /build
+/coverage
 /.svelte-kit
 /package
 .env

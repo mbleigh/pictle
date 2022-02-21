@@ -7,15 +7,28 @@ export function check(word: string, guess: string, pattern: number[]): string | 
 	return checkPattern(word, guess, pattern);
 }
 
+export function letterState(word: string, guess: string, pos: number): number {
+	const letterAtPos = guess[pos];
+	if (!word.includes(letterAtPos)) {
+		return 0;
+	} else if (word[pos] === letterAtPos) {
+		return 2;
+	}
+
+	let available = 0;
+	for (let i = 0; i < 5; i++) {
+		if (word[i] === letterAtPos && guess[i] !== letterAtPos) ++available;
+	}
+	for (let i = 0; i < pos; i++) {
+		if (word[i] !== guess[i] && guess[i] === letterAtPos) --available;
+	}
+	return available > 0 ? 1 : 0;
+}
+
 function checkPattern(word: string, guess: string, pattern: number[]): string | null {
 	for (let i = 0; i < 5; i++) {
 		const want = pattern[i];
-		if (
-			(want === 0 && word.includes(guess[i])) ||
-			(want === 1 && !word.includes(guess[i])) ||
-			(want === 1 && word[i] === guess[i]) ||
-			(want === 2 && word[i] !== guess[i])
-		) {
+		if (want !== letterState(word, guess, i)) {
 			return 'Word does not match pattern.';
 		}
 	}

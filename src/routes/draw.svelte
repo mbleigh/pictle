@@ -8,6 +8,8 @@
 	import { dbGet, dbSet } from '$lib/db';
 	import ScoreWorker from '$lib/score_worker?worker';
 	import { solvable } from '$lib/words';
+	import Changelog from '$lib/components/Changelog.svelte';
+	import { update_keyed_each } from 'svelte/internal';
 
 	let grid = [
 		[0, 0, 0, 0, 0],
@@ -24,15 +26,36 @@
 	let valids = [[], [], [], [], [], []];
 	let submitText = 'Submit';
 
-	async function fetchNext() {
-		const latest = parseInt(
-			Object.keys(await dbGet('puzzles', { orderBy: '"id"', limitToLast: '1' }))[0],
-			10
-		);
-		pid = (latest + 1).toString();
+	let puzzles: { id: number; word: string; pic: string; teaser?: string }[] = [];
+
+	async function fetchPuzzle(id: string | number) {
+		pid = id.toString();
 		seed = solvable[pid];
-		grid = JSON.parse(defaultGrid);
+
+		console.log(
+			id,
+			puzzles.map((p) => p.id)
+		);
+		const puz = puzzles.find((p) => p.id.toString() === id.toString());
+		if (puz) {
+			console.log(puz);
+			teaser = puz.teaser;
+			grid = puz.pic.split(' ').map((line) => line.split('').map((char) => parseInt(char, 10)));
+		} else {
+			grid = JSON.parse(defaultGrid);
+			teaser = '';
+		}
 	}
+
+	async function fetchNext() {
+		fetchPuzzle(puzzles[0].id + 1);
+	}
+
+	currentUser.subscribe(async (u) => {
+		if (u.user && u.user.email === 'mbleigh@gmail.com' && !puzzles.length) {
+			puzzles = Object.values<any>(await dbGet('puzzles')).sort((a, b) => b.id - a.id);
+		}
+	});
 
 	function calcHighScore(word: string, pic: number[][]): Promise<number> {
 		return new Promise((resolve, reject) => {
@@ -183,4 +206,17 @@
 		class="border border-red-300 text-2xl text-red-100 uppercase font-bold px-5 py-2 rounded mx-auto"
 		>Reset</button
 	>
+</div>
+<div class="text-center">
+	<select
+		class="bg-gray-800"
+		on:change={(e) => {
+			fetchPuzzle(e.target.value);
+		}}
+	>
+		<option>Load an existing puzzle...</option>
+		{#each puzzles as puz}
+			<option value={puz.id}>{puz.id} - {puz.word}</option>
+		{/each}
+	</select>
 </div>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Header, { showError } from '$lib/components/Header.svelte';
 
-	import { check, checkAll, highLetterScore } from '$lib/check';
+	import { check, checkAll, highLetterScore, letterState } from '$lib/check';
 	import { onMount } from 'svelte';
 	import { getMessagingToken, logEvent } from '$lib/firebase';
 
@@ -217,12 +217,16 @@
 	}): string {
 		let out = '';
 
-		if (word?.[(wip || '').length] === key) {
-			out = 'border bg-green-500 border-green-700';
-		} else if (word?.includes(key)) {
-			out = 'border bg-yellow-500 border-amber-700';
-		} else {
-			out = 'bg-gray-500';
+		switch (letterState(word || '', (wip || '') + key, (wip || '').length)) {
+			case 0:
+				out = 'bg-gray-500';
+				break;
+			case 1:
+				out = 'border bg-yellow-500 border-amber-700';
+				break;
+			case 2:
+				out = 'border bg-green-500 border-green-700';
+				break;
 		}
 
 		const guessletters = guesses.join('');

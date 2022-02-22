@@ -103,7 +103,10 @@
 	let notifEnabled = false;
 	let notifSupported = false;
 
+	let isMobile = true;
 	onMount(async () => {
+		isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
 		if (!localStorage['visited']) {
 			showInfo = true;
 			localStorage['visited'] = 'true';
@@ -713,10 +716,13 @@
 							{gimmes.length}
 						</p>
 					{:else if uniqueLetters < maxScore}
-						<p class="text-center mt-3 mb-2">Try for a higher letter score?</p>
+						<p class="text-center mt-3">Try for a higher letter score?</p>
+						<p class="text-center mb-2">
+							<b>Double-{isMobile ? 'tap' : 'click'}</b> to revise a row or
+						</p>
 						<button
 							on:click={reset}
-							class="flex text-xl items-center p-3 justify-center rounded-lg border mr-3 w-full {guesses.length ===
+							class="flex text-lg items-center px-3 py-2 justify-center rounded-lg border mr-3 w-full {guesses.length ===
 								0 || gimmes.length > 0
 								? 'border-gray-600 text-gray-600'
 								: 'border-red-100 text-red-200'}"

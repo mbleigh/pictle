@@ -78,6 +78,10 @@
 		box-shadow: 0 0 10px #cc00ff;
 	}
 
+	.glow-blue {
+		box-shadow: 0 0 10px #00ccff;
+	}
+
 	.text-glow-purple {
 		text-shadow: 0 0 3px #cc00ff;
 	}

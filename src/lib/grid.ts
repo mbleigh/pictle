@@ -7,24 +7,34 @@ export interface State {
 	done?: boolean;
 	desired: number;
 	valid?: string;
+	revising?: boolean;
 }
 
 export function generateGrid({
 	guesses,
 	word,
 	pic,
-	wip
+	wip,
+	reviseRow
 }: {
 	guesses: string[];
 	word: string;
 	pic: number[][];
 	wip: string;
+	reviseRow?: number;
 }): State[][] {
 	let grid = [[], [], [], [], [], []];
 
 	for (let y = 0; y < 6; y++) {
 		for (let x = 0; x < 5; x++) {
-			let cell: State = { char: ' ', state: 0, done: false, wip: false, desired: pic[y][x] };
+			let cell: State = {
+				char: ' ',
+				state: 0,
+				done: false,
+				wip: false,
+				revising: false,
+				desired: pic[y][x]
+			};
 			if (cell.desired === 2) {
 				cell.valid = word[x];
 			} else if (cell.desired === 1) {
@@ -36,16 +46,15 @@ export function generateGrid({
 
 			if (y === 5) {
 				cell = { ...cell, char: word[x], state: 2, done: true };
+			} else if ((reviseRow === null && y === guesses.length) || y === reviseRow) {
+				const char = wip[x] || ' ';
+				const state = letterState(word, wip, x);
+				cell = { ...cell, char, state, wip: true, revising: y < guesses.length && y === reviseRow };
 			} else if (guesses[y]) {
 				const char = guesses[y][x];
 				const state = letterState(word, guesses[y], x);
 				cell = { ...cell, char, state, done: true };
-			} else if (y === guesses.length) {
-				const char = wip[x] || ' ';
-				const state = letterState(word, wip, x);
-				cell = { ...cell, char, state, wip: true };
 			}
-
 			grid[y][x] = cell;
 		}
 	}

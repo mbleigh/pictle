@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Header, { showError } from '$lib/components/Header.svelte';
 
-	import { check, checkAll, highLetterScore, letterState } from '$lib/check';
+	import { check, checkAll, letterState } from '$lib/check';
 	import { onMount } from 'svelte';
 	import { getMessagingToken, logEvent } from '$lib/firebase';
 
@@ -38,7 +38,7 @@
 
 	let grid: State[][] = [];
 	$: if (ready) {
-		grid = generateGrid({ guesses, word, pic, wip });
+		grid = generateGrid({ guesses, word, pic, wip, reviseRow });
 	}
 
 	let wip: string = '';
@@ -46,7 +46,7 @@
 	let gimmes: number[] = [];
 	let shaking = false;
 	let winState: boolean = false;
-	$: winState = guesses.length >= 5;
+	$: winState = guesses.length >= 5 && reviseRow === null;
 	let countdownSeconds: number = 0;
 	let countdownInterval: any = null;
 	let streak = 0;
@@ -181,7 +181,14 @@
 	let letterScoreClass: { text: string; border: string } = { text: '', border: '' };
 	$: {
 		letterFrequencies = {};
-		(guesses.length === 5 ? guesses : [...guesses, wip]).forEach((guess, i) => {
+		const words = [...guesses];
+		if (reviseRow !== null) {
+			words.splice(reviseRow, 1, wip);
+		} else if (guesses.length < 5) {
+			words.push(wip);
+		}
+
+		words.forEach((guess, i) => {
 			if (gimmes.includes(i)) return;
 			for (const letter of guess.split('')) {
 				letterFrequencies[letter] = letterFrequencies[letter] || 0;
@@ -247,7 +254,8 @@
 				guesses,
 				word,
 				gimmes,
-				saveTime
+				saveTime,
+				reviseRow: reviseRow || null
 			};
 
 			localStorage['guesses'] = JSON.stringify(state);
@@ -283,13 +291,21 @@
 			return;
 		}
 
+		const row = reviseRow === null ? guesses.length : reviseRow;
+
+		if (reviseRow !== null && guesses[reviseRow] === wip) {
+			reviseRow = null;
+			wip = '';
+			return;
+		}
+
 		if (guesses.includes(wip)) {
 			shake();
 			showError("You've already used that word.");
 			return;
 		}
 
-		const message = check(word, wip, pic[guesses.length]);
+		const message = check(word, wip, pic[row]);
 		if (message) {
 			shake();
 			showError(message);
@@ -298,11 +314,26 @@
 
 		if (gimme) {
 			logEvent('used_gimme', { word });
+		} else if (reviseRow !== null) {
+			logEvent('revised_row', { word });
 		} else {
 			logEvent('correct_guess', { word, guess: wip });
 		}
-		guesses = [...guesses, wip];
+
+		const submittedWord = wip;
 		wip = '';
+		if (reviseRow === null) {
+			guesses = [...guesses, wip];
+		} else {
+			const newGuesses = [...guesses];
+			console.log(newGuesses);
+			newGuesses.splice(reviseRow, 1, submittedWord);
+			guesses = newGuesses;
+			reviseRow = null;
+			saveState();
+			return;
+		}
+
 		if (guesses.length === 5) {
 			new JSConfetti().addConfetti({
 				confettiColors: ['#4ade80', '#fde047']
@@ -324,6 +355,9 @@
 			type(event.key);
 		} else if (event.key === 'Enter') {
 			submit();
+		} else if (event.key === 'Escape' && reviseRow !== null) {
+			reviseRow = null;
+			wip = '';
 		}
 	}
 
@@ -359,6 +393,10 @@
 
 	let gimmePrimed = false;
 	function gimme(e) {
+		if (reviseRow !== null) {
+			return;
+		}
+
 		if (gimmes.length >= MAX_GIMMES) {
 			showError('No gimmes remain.');
 			return;
@@ -393,6 +431,7 @@
 			logEvent('reset_puzzle', { word, guesses_made: guesses.length, after_complete: winState });
 			guesses = [];
 			wip = '';
+			reviseRow = null;
 			gimmes = [];
 			saveState();
 			resetPrimed = false;
@@ -424,6 +463,24 @@
 			localStorage.removeItem('notif_token');
 			logEvent('disable_notifications');
 		}
+	}
+
+	let reviseRow: number | null = null;
+	const rowClicks: Record<number, number> = {};
+	const DOUBLECLICK_INTERVAL = 750;
+	function rowClick(rowNum: number) {
+		if ((rowClicks[rowNum] || 0) > Date.now() - DOUBLECLICK_INTERVAL) {
+			if (rowNum === reviseRow || (rowNum === guesses.length && reviseRow !== null)) {
+				reviseRow = null;
+				wip = '';
+			} else if (rowNum < guesses.length) {
+				wip = '';
+				reviseRow = rowNum;
+				rowClicks[rowNum] = undefined;
+				return;
+			}
+		}
+		rowClicks[rowNum] = Date.now();
 	}
 </script>
 
@@ -514,23 +571,64 @@
 				</div>
 			</div>
 
-			<div class="my-3">
+			<div class="my-3 select-none">
 				{#each grid as row, i}
 					<div
-						class="text-center mb-1 flex justify-center"
-						class:shake={i === guesses.length && shaking}
+						class="text-center mb-1 flex justify-center align-middle"
+						class:shake={(i === reviseRow || (reviseRow === null && i === guesses.length)) &&
+							shaking}
+						on:click={() => rowClick(i)}
 					>
+						{#if reviseRow === i}
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="h-5 w-5 self-center{reviseRow === i
+									? ''
+									: ' invisible'} mr-1 text-orange-300"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+							>
+								<path
+									fill-rule="evenodd"
+									d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+									clip-rule="evenodd"
+								/>
+							</svg>
+						{:else if i === guesses.length && reviseRow === null && guesses.length < 5}
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="h-5 w-5 mr-1 text-gray-500 self-center"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+							>
+								<path
+									fill-rule="evenodd"
+									d="M10.293 15.707a1 1 0 010-1.414L14.586 10l-4.293-4.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z"
+									clip-rule="evenodd"
+								/>
+								<path
+									fill-rule="evenodd"
+									d="M4.293 15.707a1 1 0 010-1.414L8.586 10 4.293 5.707a1 1 0 011.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z"
+									clip-rule="evenodd"
+								/>
+							</svg>
+						{:else}
+							<div class="w-5 mr-1" />
+						{/if}
 						{#each row as cell}
 							<div
 								class="mx-0.5 border-2 w-14 h-14 flex justify-center items-center text-2xl uppercase font-bold {stateClasses(
 									cell
 								)}{cell.char === ' ' ? ' text-gray-600' : ''}"
 							>
-								{cell.valid?.length === 1 && cell.char === ' ' && guesses.length === i
+								{cell.valid?.length === 1 &&
+								cell.char === ' ' &&
+								(guesses.length === i || reviseRow === i)
 									? cell.valid
 									: cell.char}
 							</div>
 						{/each}
+						<div class="w-5 ml-1" />
 					</div>
 				{/each}
 			</div>
@@ -561,7 +659,7 @@
 					<button
 						on:click={gimme}
 						class="flex text-lg items-center uppercase p-2 rounded-lg border {gimmes.length <
-						MAX_GIMMES
+							MAX_GIMMES && reviseRow === null
 							? 'border-orange-100 text-orange-200'
 							: 'border-gray-600 text-gray-600'}"
 						><svg

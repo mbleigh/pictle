@@ -29,6 +29,7 @@
 	<h1 class="text-3xl font-bold mb-3">Changelog</h1>
 	<h2 class="text-green-300 font-bold text-xl mb-2">February 21, 2022</h2>
 	<ul class="list-disc pl-6 text-sm marker:text-green-300">
+		<li>Added revise ability through double-tap.</li>
 		<li>
 			Now uses proper Wordle coloring (see <a
 				href="https://github.com/mbleigh/pictle/issues/10"

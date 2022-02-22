@@ -326,7 +326,7 @@
 		const submittedWord = wip;
 		wip = '';
 		if (reviseRow === null) {
-			guesses = [...guesses, wip];
+			guesses = [...guesses, submittedWord];
 		} else {
 			const newGuesses = [...guesses];
 			console.log(newGuesses);

@@ -1,7 +1,7 @@
 # 🖼️ Pictle
 
 Pictle is a simple yet surprisingly challenging game inspired by
-[Wordle](https://www.powerlanguage.co.uk/wordle/). Rather than guessing a word,
+[Wordle](https://www.nytimes.com/games/wordle/index.html). Rather than guessing a word,
 players start with a word and a visual pattern that you must replicate by
 guessing words with letters in (and not in) the appropriate places.
 
